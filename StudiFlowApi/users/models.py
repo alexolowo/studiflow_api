@@ -31,7 +31,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=255)
     canvas_token = models.CharField(max_length=255)
-    courses = models.ManyToManyField('user_courses.UserCourse', related_name='courses')
+    courses = models.ManyToManyField('user_courses.UserCourse', related_name='courses', blank=True)
     # tasks = models.ManyToManyField('tasks.Tasks', related_name='tasks')
     session_avg = models.FloatField(default=0.0)
 
