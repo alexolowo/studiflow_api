@@ -24,4 +24,5 @@ class UserCourse(models.Model):
     #TODO: Add resources model one to many relationship
 
     def __str__(self):
-        return self.course_name
+        return str(self.course_name)
+

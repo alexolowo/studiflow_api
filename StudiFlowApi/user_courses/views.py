@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from users.models import User
 from rest_framework import generics, status
 from rest_framework.request import Request

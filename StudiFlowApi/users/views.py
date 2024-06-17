@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.middleware.csrf import get_token
+from .tokens import create_tokens
 
 # Create your views here.
 
@@ -41,9 +42,10 @@ class LoginView(APIView):
         user = authenticate(request=request, email=email, password=password)
         
         if user is not None:
+            tokens = create_tokens(user)
             response = {
                 'message': 'User logged in successfully',
-                'token': user.auth_token.key
+                'token': tokens
             }
             login(request, user)
             
