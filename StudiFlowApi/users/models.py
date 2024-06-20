@@ -12,6 +12,8 @@ class CustomUserManager(BaseUserManager):
 
         user.set_password(password)
         user.save()
+        #TODO: Add token creation here
+        #TODO: Add permissions here
 
         return user
 
@@ -41,5 +43,5 @@ class User(AbstractUser):
 
 
     def __str__(self):
-        return self.username
+        return str(self.username)
     

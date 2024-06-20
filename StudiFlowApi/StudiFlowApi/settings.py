@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'user_courses.apps.UserCoursesConfig',
     'tasks.apps.TasksConfig',
     'resources.apps.ResourcesConfig',
+    'courses.apps.CoursesConfig',
 ]
 
 MIDDLEWARE = [
