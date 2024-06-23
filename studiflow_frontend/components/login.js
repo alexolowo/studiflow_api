@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import { useState } from 'react';
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,6 @@ export default function LoginForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        
 
         try {
             const response = await fetch('/api/login', {
