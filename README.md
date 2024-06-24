@@ -30,6 +30,7 @@ Ensure you have Python installed on your machine. This project uses Python 3.8.
     pip install psycopg2-binary
     pip install djangorestframework-simplejwt
     pip install requests
+    pip install django-cors-headers
     ```
 
 ## Running the Application
