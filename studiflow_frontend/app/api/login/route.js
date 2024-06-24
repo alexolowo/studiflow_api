@@ -11,7 +11,7 @@ export async function POST(request) {
 
         // For testing purposes, we'll use a simple check
         // In a real application, you would validate against a database
-        if (username === 'testuser' && password === 'testpassword') {
+        if (username === '1' && password === '1') {
             // Create a payload for the JWT
             const payload = {
                 id: '1234567890',

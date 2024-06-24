@@ -1,10 +1,15 @@
 "use client"
+
+import { useRouter } from 'next/navigation';
+
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 
 export default function Signup() {
+    const router = useRouter();
+
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -17,7 +22,6 @@ export default function Signup() {
         setError('');
         setSuccess('');
 
-        // Basic validation
         if (password !== retypePassword) {
             setError('Passwords do not match');
             return;
@@ -35,7 +39,9 @@ export default function Signup() {
             if (response.ok) {
                 const data = await response.json();
                 setSuccess('Signup successful');
+                localStorage.setItem('token', data.token);
                 console.log('Signup successful', data);
+                router.push('/home');
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Signup failed');

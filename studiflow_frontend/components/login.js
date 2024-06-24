@@ -1,11 +1,15 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
+
 import { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginForm() {
+    const router = useRouter();
+
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -15,7 +19,7 @@ export default function LoginForm() {
         setError('');
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('http://localhost:8000/auth/login/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -25,9 +29,9 @@ export default function LoginForm() {
 
             if (response.ok) {
                 const data = await response.json();
-                // Handle successful login (e.g., store token, redirect)
+                localStorage.setItem('token', data.token);
                 console.log('Login successful', data);
-                // You might want to redirect or update app state here
+                router.push('/home');
             } else {
                 setError('Login failed. Please check your credentials.');
             }
