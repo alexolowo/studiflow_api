@@ -30,6 +30,7 @@ SECRET_KEY = 'django-insecure-h=%_^3yvsbe-w5e7uh=151tp16z(i&)-39@_^eol-r8y90d=+1
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 ALLOWED_HOSTS = []
 
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'resources.apps.ResourcesConfig',
     'courses.apps.CoursesConfig',
     'sections.apps.SectionsConfig',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'StudiFlowApi.urls'
@@ -118,6 +121,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
 ]
 
 REST_FRAMEWORK = {
