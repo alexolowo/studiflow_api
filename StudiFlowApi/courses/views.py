@@ -3,7 +3,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from studiflow_api.StudiFlowApi.sections.models import Section
+from sections.models import Section
 
 from .models import Course
 from rest_framework.permissions import IsAuthenticated
@@ -30,13 +30,13 @@ class UserCoursesView(generics.GenericAPIView):
                 
                 if not Course.objects.filter(course_id=course_data["id"]).exists():
                     
-                    course = Course(
-                            course_id=course_data["id"],
-                            course_name=course_data["name"],
-                            course_code=course_data["course_code"],
-                            isMainCourse=True,
+                    # course = Course(
+                    #         course_id=course_data["id"],
+                    #         course_name=course_data["name"],
+                    #         course_code=course_data["course_code"],
+                    #         isMainCourse=True,
                             
-                        )
+                    #     )
                     if "LEC" in course_data["name"].split()[0]:
                         course.isMainCourse = True
                         
@@ -46,13 +46,13 @@ class UserCoursesView(generics.GenericAPIView):
                         course_name = course_data["name"]
                         main_course_name = course_name.split()[0]
                         main_course = Course.objects.get(course_name=main_course_name)
-                        section, created = Section.objects.get_or_create(main_course=main_course)
+                        # section, created = Section.objects.get_or_create(main_course=main_course)
                         
-                        if created:
-                            section.section_courses = [course_data["id"]]
-                        else:
-                            section.section_courses.append(course_data["id"])
-                        section.save()
+                        # if created:
+                        #     section.section_courses = [course_data["id"]]
+                        # else:
+                        #     section.section_courses.append(course_data["id"])
+                        # section.save()
                     course.save()
 
             return Response(status=status.HTTP_200_OK, data={"message": "User courses retrieved and saved successfully.", "courses": courses_data})

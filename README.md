@@ -28,6 +28,8 @@ Ensure you have Python installed on your machine. This project uses Python 3.8.
     pip install dj_database_url
     pip install python-dotenv
     pip install psycopg2-binary
+    pip install djangorestframework-simplejwt
+    pip install requests
     ```
 
 ## Running the Application
