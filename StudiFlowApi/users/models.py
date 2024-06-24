@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 
 # Create your models here.
 
@@ -12,7 +12,8 @@ class CustomUserManager(BaseUserManager):
 
         user.set_password(password)
         user.save()
-        #TODO: Add token creation here
+        
+        # permission = Permission.objects.get(name='Can view user')
         #TODO: Add permissions here
 
         return user
@@ -35,7 +36,7 @@ class User(AbstractUser):
     canvas_token = models.CharField(max_length=255)
     courses = models.ManyToManyField('user_courses.UserCourse', related_name='courses', blank=True)
     # tasks = models.ManyToManyField('tasks.Tasks', related_name='tasks')
-    session_avg = models.FloatField(default=0.0)
+    session_avg = models.FloatField(default=0.0, blank=True)
 
     objects = CustomUserManager()
     USERNAME_FIELD = 'email'

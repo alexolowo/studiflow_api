@@ -45,11 +45,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'users.apps.UsersConfig',
     'user_courses.apps.UserCoursesConfig',
     'tasks.apps.TasksConfig',
     'resources.apps.ResourcesConfig',
     'courses.apps.CoursesConfig',
+    'sections.apps.SectionsConfig',
 ]
 
 MIDDLEWARE = [
