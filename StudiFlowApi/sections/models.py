@@ -4,14 +4,15 @@ from django.db import models
 class Section(models.Model):
 
     SECTION_TYPES = [
-        ('lecture', 'Lecture'),
-        ('tutorial', 'Tutorial'),
-        ('lab', 'Lab'),
+        ('TUT', 'Tutorial'),
+        ('PRA', 'Lab'),
+        ('LAB', 'Lab'),
     ]
 
-    main_course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
+    lecture_course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
     section_type = models.CharField(max_length=10, choices=SECTION_TYPES)
-    name = models.CharField(max_length=255)
+    id = models.IntegerField(primary_key=True)
+    enrollment_term_id = models.IntegerField(blank=False, null=False)
 
     def __str__(self):
         return f'Section {self.pk}'
