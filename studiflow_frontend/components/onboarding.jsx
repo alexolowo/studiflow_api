@@ -1,4 +1,4 @@
-import { Button } from "@/app/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
@@ -7,16 +7,16 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/app/components/ui/dialog"
-import { Input } from "@/app/components/ui/input"
-import { Label } from "@/app/components/ui/label"
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
-} from "@/app/components/ui/tabs"
+} from "@/components/ui/tabs"
 import Login from "./login"
 import Signup from "./signup"
 

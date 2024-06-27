@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation";
 
 import { FaBell } from 'react-icons/fa';
-import ListView from "@/app/components/listView";
+import ListView from "@/components/listView";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 
 export default function Home() {

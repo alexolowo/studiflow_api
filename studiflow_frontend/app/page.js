@@ -1,7 +1,7 @@
 "use client"
 import useAuth from "@/hooks/useAuth";
-import OnBoarding from "@/app/components/onboarding";
-import Home from "./components/home";
+import OnBoarding from "@/components/onboarding";
+import Home from "../components/home";
 
 export default function App() {
   const { isAuthenticated } = useAuth();
