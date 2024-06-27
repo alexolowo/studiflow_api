@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/app/components/ui/button"
 import {
     Dialog,
     DialogContent,
@@ -7,16 +7,16 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/app/components/ui/dialog"
+import { Input } from "@/app/components/ui/input"
+import { Label } from "@/app/components/ui/label"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
-} from "@/components/ui/tabs"
+} from "@/app/components/ui/tabs"
 import Login from "./login"
 import Signup from "./signup"
 
@@ -29,11 +29,11 @@ export default function OnBoarding() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] w-full">
                 <DialogHeader>
-                        <VisuallyHidden asChild>
-                            <DialogTitle>
-                                Login or Sign Up
-                            </DialogTitle>
-                        </VisuallyHidden>
+                    <VisuallyHidden asChild>
+                        <DialogTitle>
+                            Login or Sign Up
+                        </DialogTitle>
+                    </VisuallyHidden>
                 </DialogHeader>
                 <Tabs defaultValue="account" className="w-full">
                     <TabsList className="grid w-full grid-cols-2 mb-4 max-w-fit mx-auto">

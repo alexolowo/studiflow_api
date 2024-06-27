@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Progress } from "@/app/components/ui/progress";
 
 const CourseCard = ({ course }) => {
     return (

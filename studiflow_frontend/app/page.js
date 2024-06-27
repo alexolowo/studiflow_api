@@ -1,10 +1,21 @@
-import OnBoarding from "@/components/onboarding";
+"use client"
+import useAuth from "@/hooks/useAuth";
+import OnBoarding from "@/app/components/onboarding";
+import Home from "./components/home";
 
-export default function Home() {
+export default function App() {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <div className="flex items-center justify-center h-screen text-6xl w-full">
-      Studiflow
-      <OnBoarding/>
+    <div className="flex items-center justify-center h-screen w-full">
+      {isAuthenticated ? (
+        <Home />
+      ) : (
+        <div className="text-6xl">
+          Studiflow
+          <OnBoarding />
+        </div>
+      )}
     </div>
   );
 }
