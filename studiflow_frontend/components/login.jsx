@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export default function LoginForm() {
     const router = useRouter();
 
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
@@ -24,7 +24,7 @@ export default function LoginForm() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ email, password }),
             });
 
             if (response.ok) {
@@ -33,6 +33,8 @@ export default function LoginForm() {
                 console.log('Login successful', data);
                 router.push('/home');
             } else {
+                const data = await response.json();
+                console.log(data.message);
                 setError('Login failed. Please check your credentials.');
             }
         } catch (error) {
@@ -44,12 +46,12 @@ export default function LoginForm() {
     return (
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
             <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Email</Label>
                 <Input
                     id="username"
                     type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full"
                     required
                 />

@@ -1,0 +1,7 @@
+export default function Filters() {
+    return (
+        <div className="w-1/5 bg-white shadow-md h-screen">
+            Filters
+        </div>
+    )
+}

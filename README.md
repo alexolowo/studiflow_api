@@ -41,8 +41,8 @@ Ensure you have Python installed on your machine. This project uses Python 3.8.
     ```
 
 2. Run the Django server:
-    ```
-    python manage.py runserver
+    ```python3 manage.py runserver
+    
     ```
 
 The application should now be running at `http://127.0.0.1:8000/`.
