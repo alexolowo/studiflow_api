@@ -59,9 +59,8 @@ class UserCoursesView(generics.GenericAPIView):
 
                 is_existing_course_or_section = (
                     Course.objects.filter(id=course_data["id"]).exists()
-                    Course.objects.filter(id=course_data["id"]).exists()
                     or Section.objects.filter(id=course_data["id"]).exists()
-                )
+                    )
 
                 if not is_existing_course_or_section:
                     
