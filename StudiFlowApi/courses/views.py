@@ -57,12 +57,13 @@ class UserCoursesView(generics.GenericAPIView):
             for course_data in courses_data:
 
                 is_existing_course_or_section = (
-                    Course.objects.filter(course_id=course_data["id"]).exists()
+                    Course.objects.filter(id=course_data["id"]).exists()
                     or Section.objects.filter(id=course_data["id"]).exists()
                 )
 
                 if not is_existing_course_or_section:
-
+                    # TODO: Do the edge case for when the course name isn't in a course code format.
+                    print(course_data["name"].split()[2])
                     if "LEC" in course_data["name"].split()[2]:
                         course = Course(
                             id=course_data["id"],
@@ -70,6 +71,7 @@ class UserCoursesView(generics.GenericAPIView):
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
                         )
+                        course.save()
 
                     elif (
                         "TUT" in course_data["name"].split()[2]
@@ -99,7 +101,7 @@ class UserCoursesView(generics.GenericAPIView):
                         else:
                             section.section_courses.append(course_data["id"])
                         section.save()
-                    course.save()
+                    
 
             return Response(
                 status=status.HTTP_200_OK,
