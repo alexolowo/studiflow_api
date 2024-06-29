@@ -19,7 +19,7 @@ class Course(models.Model):
     id = models.IntegerField(primary_key=True)
     course_code = models.CharField(max_length=255)
     is_lecture = models.BooleanField(default=False)
-    enorllment_term_id = models.IntegerField(blank=False, null=False)
+    enrollment_term_id = models.IntegerField(blank=False, null=False)
     
     # syllabus = models.OneToOneField('Syllabus', on_delete=models.CASCADE, related_name='user_courses_syllabus')
     #TODO: Add resources model one to many relationship

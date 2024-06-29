@@ -23,14 +23,14 @@ Ensure you have Python installed on your machine. This project uses Python 3.8.
 
 4. Install the required packages:
     ```
-    pip install django
-    pip install djangorestframework
-    pip install dj_database_url
-    pip install python-dotenv
-    pip install psycopg2-binary
-    pip install djangorestframework-simplejwt
-    pip install requests
-    pip install django-cors-headers
+    pip3 install django
+    pip3 install djangorestframework
+    pip3 install dj_database_url
+    pip3 install python-dotenv
+    pip3 install psycopg2-binary
+    pip3 install djangorestframework-simplejwt
+    pip3 install requests
+    pip3 install django-cors-headers
     ```
 
 ## Running the Application

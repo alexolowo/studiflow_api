@@ -55,26 +55,31 @@ class UserCoursesView(generics.GenericAPIView):
             courses_data = response.json()
 
             for course_data in courses_data:
+                name_parts = course_data["name"].split()
 
                 is_existing_course_or_section = (
-                    Course.objects.filter(course_id=course_data["id"]).exists()
+                    Course.objects.filter(id=course_data["id"]).exists()
                     or Section.objects.filter(id=course_data["id"]).exists()
                 )
 
                 if not is_existing_course_or_section:
+                    
+                    if not len(name_parts)>2:
+                        continue
 
-                    if "LEC" in course_data["name"].split()[2]:
+                    if len(name_parts)>2 and "LEC" in name_parts[2]:
                         course = Course(
                             id=course_data["id"],
                             course_code=course_data["course_code"].split()[0],
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
                         )
+                        course.save()
 
                     elif (
-                        "TUT" in course_data["name"].split()[2]
-                        or "PRA" in course_data["name"].split()[2]
-                        or "LAB" in course_data["name"].split()[2]
+                        "TUT" in name_parts[2]
+                        or "PRA" in name_parts[2]
+                        or "LAB" in name_parts[2]
                     ):
 
                         lecture_course_code = course_data["course_code"].split()[0]
@@ -99,7 +104,6 @@ class UserCoursesView(generics.GenericAPIView):
                         else:
                             section.section_courses.append(course_data["id"])
                         section.save()
-                    course.save()
 
             return Response(
                 status=status.HTTP_200_OK,
