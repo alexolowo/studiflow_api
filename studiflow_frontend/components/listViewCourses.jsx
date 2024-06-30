@@ -1,7 +1,27 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import CourseCard from "./courseCard";
 
+// A helper function
+function parseCourses(data) {
+    return data.map(course => {
+        const totalTasks = Math.floor(Math.random() * 12) + 1;
+        const completedTasks = Math.floor(Math.random() * totalTasks);
+
+        return {
+            courseCode: course.course_code,
+            courseName: course.name,
+            totalTasks: totalTasks,
+            completedTasks: completedTasks
+        };
+    });
+}
+
+
 export default function ListViewCourses() {
-    const data = [
+    const [error, setError] = useState('');
+    const [data, setData] = useState([
         {
             courseCode: 'APS360',
             courseName: 'Applied Fundamentals of Deep Learning',
@@ -44,7 +64,40 @@ export default function ListViewCourses() {
             totalTasks: 11,
             completedTasks: 9
         }
-    ];
+    ]);
+
+    useEffect(() => {
+        async function getCourses() {
+            try {
+                const accessToken = localStorage.getItem('accessToken');
+
+                console.log("accessToken", accessToken);
+
+                const response = await fetch('http://localhost:8000/courses/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+
+                if (!response.ok) {
+                    setError("Failed getting active courses");
+                    throw new Error(`HTTP error getting courses! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                data && setData(parseCourses(data.courses));
+            } catch (e) {
+                setError(e.message);
+                console.error("There was a problem fetching the courses:");
+                console.log(e);
+            }
+
+        };
+
+        getCourses();
+    }, [])
 
     return (
         <div className="grid grid-cols-2 gap-4 w-full h-fit">
