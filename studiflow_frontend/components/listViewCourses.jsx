@@ -21,51 +21,52 @@ function parseCourses(data) {
 
 export default function ListViewCourses() {
     const [error, setError] = useState('');
-    const [data, setData] = useState([
-        {
-            courseCode: 'APS360',
-            courseName: 'Applied Fundamentals of Deep Learning',
-            totalTasks: 10,
-            completedTasks: 8
-        },
-        {
-            courseCode: 'CSC148',
-            courseName: 'Introduction to Computer Science',
-            totalTasks: 12,
-            completedTasks: 12
-        },
-        {
-            courseCode: 'MAT235',
-            courseName: 'Multivariable Calculus',
-            totalTasks: 8,
-            completedTasks: 6
-        },
-        {
-            courseCode: 'ECO101',
-            courseName: 'Principles of Microeconomics',
-            totalTasks: 15,
-            completedTasks: 10
-        },
-        {
-            courseCode: 'PHY131',
-            courseName: 'Introduction to Physics I',
-            totalTasks: 14,
-            completedTasks: 11
-        },
-        {
-            courseCode: 'ENG101',
-            courseName: 'Effective Communication',
-            totalTasks: 9,
-            completedTasks: 7
-        },
-        {
-            courseCode: 'CHM135',
-            courseName: 'Chemistry: Physical Principles',
-            totalTasks: 11,
-            completedTasks: 9
-        }
-    ]);
-
+    // const [data, setData] = useState([
+    //     {
+    //         courseCode: 'APS360',
+    //         courseName: 'Applied Fundamentals of Deep Learning',
+    //         totalTasks: 10,
+    //         completedTasks: 8
+    //     },
+    //     {
+    //         courseCode: 'CSC148',
+    //         courseName: 'Introduction to Computer Science',
+    //         totalTasks: 12,
+    //         completedTasks: 12
+    //     },
+    //     {
+    //         courseCode: 'MAT235',
+    //         courseName: 'Multivariable Calculus',
+    //         totalTasks: 8,
+    //         completedTasks: 6
+    //     },
+    //     {
+    //         courseCode: 'ECO101',
+    //         courseName: 'Principles of Microeconomics',
+    //         totalTasks: 15,
+    //         completedTasks: 10
+    //     },
+    //     {
+    //         courseCode: 'PHY131',
+    //         courseName: 'Introduction to Physics I',
+    //         totalTasks: 14,
+    //         completedTasks: 11
+    //     },
+    //     {
+    //         courseCode: 'ENG101',
+    //         courseName: 'Effective Communication',
+    //         totalTasks: 9,
+    //         completedTasks: 7
+    //     },
+    //     {
+    //         courseCode: 'CHM135',
+    //         courseName: 'Chemistry: Physical Principles',
+    //         totalTasks: 11,
+    //         completedTasks: 9
+    //     }
+    // ]);
+    const [data, setData] = useState([]);
+    
     useEffect(() => {
         async function getCourses() {
             try {
