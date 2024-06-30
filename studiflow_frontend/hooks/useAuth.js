@@ -18,7 +18,7 @@ function useAuth() {
     checkAuth();
 
     // Set up an interval to check auth status periodically
-    const interval = setInterval(checkAuth, 10000);
+    const interval = setInterval(checkAuth, 3000);
 
     return () => clearInterval(interval);
   }, []);
