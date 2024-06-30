@@ -7,7 +7,7 @@ export default function App() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="flex items-center justify-center h-screen w-full">
+    <div key={isAuthenticated ? 'authenticated' : 'unauthenticated'}>
       {isAuthenticated ? (
         <Home />
       ) : (

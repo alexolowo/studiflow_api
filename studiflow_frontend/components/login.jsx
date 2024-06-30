@@ -29,9 +29,10 @@ export default function LoginForm() {
 
             if (response.ok) {
                 const data = await response.json();
-                localStorage.setItem('token', data.token);
-                console.log('Login successful', data);
-                router.push('/home');
+                localStorage.setItem('accessToken', data.token.access);
+                localStorage.setItem('refreshToken', data.token.refresh);
+                // router.push('/home');
+                router.push('/');
             } else {
                 const data = await response.json();
                 console.log(data.message);

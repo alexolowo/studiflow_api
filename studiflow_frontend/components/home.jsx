@@ -18,11 +18,11 @@ export default function Home() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem('token');
+            const accessToken = localStorage.getItem('accessToken');
 
-            console.log("token is", token);
+            console.log("token in local storage", accessToken);
 
-            if (!token) {
+            if (!accessToken) {
                 setError('No token found');
 
                 return;
