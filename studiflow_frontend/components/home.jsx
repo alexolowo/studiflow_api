@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { FaBell } from 'react-icons/fa';
 import ListView from "@/components/listView";
+import KanbanView from "./kanbanView";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -81,7 +82,7 @@ export default function Home() {
                         <ListView />
                     </TabsContent>
                     <TabsContent value="kanban" className="w-full">
-                        Kanban!
+                        <KanbanView/>
                     </TabsContent>
                 </div>
             </Tabs>
