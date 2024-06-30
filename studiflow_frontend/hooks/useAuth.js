@@ -29,7 +29,12 @@ function useAuth() {
 
   };
 
-  return { isAuthenticated };
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    setIsAuthenticated(false);
+  };
+
+  return { isAuthenticated, logout };
 }
 
 export default useAuth;

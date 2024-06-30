@@ -10,8 +10,18 @@ import KanbanView from "./kanbanView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-export default function Home() {
+
+
+export default function Home({ logout }) {
     // const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const router = useRouter();
@@ -57,7 +67,7 @@ export default function Home() {
 
     return (
         <>
-            <div className="flex justify-between items-center p-4 bg-white shadow-md">
+            <div className="flex justify-between items-center py-4 px-8 bg-white shadow-md">
                 <div className="text-xl font-semibold text-gray-800">
                     Hello, Ron!
                 </div>
@@ -66,10 +76,17 @@ export default function Home() {
                         <div className="absolute inset-0 bg-gray-200 rounded-full"></div>
                         <FaBell className="w-6 h-6 text-gray-600 relative z-10" />
                     </div>
-                    <Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger>
+                            <Avatar>
+                                <AvatarImage src="https://github.com/shadcn.png" />
+                                <AvatarFallback>CN</AvatarFallback>
+                            </Avatar>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
             <Tabs defaultValue="list" className="w-full flex flex-col items-center">
@@ -82,7 +99,7 @@ export default function Home() {
                         <ListView />
                     </TabsContent>
                     <TabsContent value="kanban" className="w-full">
-                        <KanbanView/>
+                        <KanbanView />
                     </TabsContent>
                 </div>
             </Tabs>
