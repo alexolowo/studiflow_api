@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from sections.models import Section
 
 from .models import Course
+from .serializers import CourseSerializer
 from rest_framework.permissions import IsAuthenticated
 
 
-class UserCoursesView(generics.GenericAPIView):
+class LoadUserCoursesView(generics.GenericAPIView):
     """
     API view for retrieving and saving user courses.
 
@@ -71,11 +72,12 @@ class UserCoursesView(generics.GenericAPIView):
                         course = Course(
                             id=course_data["id"],
                             course_code=course_data["course_code"].split()[0],
+                            course_name=course_data["name"],
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
                         )
                         course.save()
-                        course.save()
+                        course.user.add(request.user)
 
                     elif (
                         "TUT" in name_parts[2]
@@ -108,7 +110,38 @@ class UserCoursesView(generics.GenericAPIView):
 
             return Response(
                 status=status.HTTP_200_OK,
-                data={"message": "User courses retrieved and saved successfully.", "courses": courses_data},
+                data={"message": "User courses retrieved and saved successfully."},
             )
 
         return Response(data={"error": "Failed to retrieve user courses."}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class RetrieveUserCoursesView(generics.ListAPIView):
+    """
+    API view for retrieving all course models for a user.
+
+    This view allows authenticated users to retrieve all course models associated with their account.
+
+    Attributes:
+        permission_classes (list): A list of permission classes that control access to this view.
+        serializer_class (Serializer): The serializer class used to serialize the course models.
+
+    Methods:
+        get_queryset() -> QuerySet: Returns the queryset of course models for the user.
+
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def get_queryset(self):
+        """
+        Returns the queryset of course models for the user.
+
+        This method retrieves all course models associated with the user's account.
+
+        Returns:
+            QuerySet: The queryset of course models.
+
+        """
+        user = self.request.user
+        return user.lecture_courses.all()
