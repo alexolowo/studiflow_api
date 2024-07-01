@@ -1,4 +1,5 @@
 import requests
+import re
 from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -46,6 +47,9 @@ class LoadUserCoursesView(generics.GenericAPIView):
         """
 
         bearer_token = request.user.canvas_token
+        
+        course_code_pattern = r"[A-Z]{3,4}\d{3}H\d"
+        section_pattern = r"(TUT|PRA|LAB)"
 
         url = "https://utoronto.instructure.com/api/v1/courses"
         headers = {"Authorization": f"Bearer {bearer_token}"}
@@ -56,19 +60,21 @@ class LoadUserCoursesView(generics.GenericAPIView):
             courses_data = response.json()
 
             for course_data in courses_data:
-                name_parts = course_data["name"].split()
+                course_code = course_data["course_code"]
+                received_course_code = course_data["course_code"].split()
+                match = re.match(course_code_pattern, received_course_code[0])
 
                 is_existing_course_or_section = (
                     Course.objects.filter(id=course_data["id"]).exists()
                     or Section.objects.filter(id=course_data["id"]).exists()
                     )
-
+                
                 if not is_existing_course_or_section:
                     
-                    if not len(name_parts)>2:
+                    if not match:
                         continue
 
-                    if len(name_parts)>2 and "LEC" in name_parts[2]:
+                    if "LEC" in received_course_code[2] or not re.search(section_pattern, course_code):
                         course = Course(
                             id=course_data["id"],
                             course_code=course_data["course_code"].split()[0],
@@ -78,11 +84,12 @@ class LoadUserCoursesView(generics.GenericAPIView):
                         )
                         course.save()
                         course.user.add(request.user)
+                    #TODO: use AI to determine if the course is a lecture or not
 
                     elif (
-                        "TUT" in name_parts[2]
-                        or "PRA" in name_parts[2]
-                        or "LAB" in name_parts[2]
+                        "TUT" in received_course_code[2]
+                        or "PRA" in received_course_code[2]
+                        or "LAB" in received_course_code[2]
                     ):
 
                         lecture_course_code = course_data["course_code"].split()[0]
@@ -108,16 +115,16 @@ class LoadUserCoursesView(generics.GenericAPIView):
                             section.section_courses.append(course_data["id"])
                         section.save()
 
-                    elif is_existing_course_or_section:
-                        received_courses = Course.objects.get(id=course_data["id"])
-
-                        if received_courses:
-                            received_courses.user.add(request.user)
+                elif is_existing_course_or_section:
+                    received_courses = Course.objects.get(id=course_data["id"])
+                    
+                    if received_courses:
+                        received_courses.user.add(request.user)
 
 
             return Response(
                 status=status.HTTP_200_OK,
-                data={"message": "User courses retrieved and saved successfully."},
+                data={"message": "User courses retrieved and saved successfully.", "courses": courses_data},
             )
 
         return Response(data={"error": "Failed to retrieve user courses."}, status=status.HTTP_400_BAD_REQUEST)
@@ -151,5 +158,4 @@ class RetrieveUserCoursesView(generics.ListAPIView):
 
         """
         user = self.request.user
-        print(user.lecture_courses.all())
         return user.lecture_courses.all()
