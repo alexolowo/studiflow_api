@@ -11,6 +11,9 @@ from .serializers import CourseSerializer
 from rest_framework.permissions import IsAuthenticated
 
 
+COURSE_CODE_PATTERN = r"[A-Z]{3,4}\d{3}H\d"
+SECTION_PATTERN = r"(TUT|PRA|LAB)"
+
 class LoadUserCoursesView(generics.GenericAPIView):
     """
     API view for retrieving and saving user courses.
@@ -27,6 +30,13 @@ class LoadUserCoursesView(generics.GenericAPIView):
     """
 
     permission_classes = [IsAuthenticated]
+    
+    def get_course_data(self, bearer_token):
+        url = "https://utoronto.instructure.com/api/v1/courses"
+        headers = {"Authorization": f"Bearer {bearer_token}"}
+        params = {"enrollment_state": "active"}
+        response = requests.get(url, headers=headers, params=params)
+        return response
 
     def get(self, request: Request):
         """
@@ -48,13 +58,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
 
         bearer_token = request.user.canvas_token
         
-        course_code_pattern = r"[A-Z]{3,4}\d{3}H\d"
-        section_pattern = r"(TUT|PRA|LAB)"
-
-        url = "https://utoronto.instructure.com/api/v1/courses"
-        headers = {"Authorization": f"Bearer {bearer_token}"}
-        params = {"enrollment_state": "active"}
-        response = requests.get(url, headers=headers, params=params)
+        response = self.get_course_data(bearer_token)
 
         if response.status_code == 200:
             courses_data = response.json()
@@ -62,7 +66,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
             for course_data in courses_data:
                 course_code = course_data["course_code"]
                 received_course_code = course_data["course_code"].split()
-                match = re.match(course_code_pattern, received_course_code[0])
+                match = re.match(COURSE_CODE_PATTERN, received_course_code[0])
 
                 is_existing_course_or_section = (
                     Course.objects.filter(id=course_data["id"]).exists()
@@ -74,7 +78,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
                     if not match:
                         continue
 
-                    if "LEC" in received_course_code[2] or not re.search(section_pattern, course_code):
+                    if "LEC" in received_course_code[2] or not re.search(SECTION_PATTERN, course_code):
                         course = Course(
                             id=course_data["id"],
                             course_code=course_data["course_code"].split()[0],
@@ -159,3 +163,11 @@ class RetrieveUserCoursesView(generics.ListAPIView):
         """
         user = self.request.user
         return user.lecture_courses.all()
+    
+    def get(self, request: Request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serialized_courses = CourseSerializer(queryset, many=True)
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"message": "User courses retrieved and saved successfully.", "courses": serialized_courses.data},
+        )
