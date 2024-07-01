@@ -25,11 +25,13 @@ export default function Home({ logout }) {
     // const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const router = useRouter();
+    const [username, setUsername] = useState('');
 
 
     useEffect(() => {
         const fetchData = async () => {
             const accessToken = localStorage.getItem('accessToken');
+            setUsername(localStorage.getItem('username'));
 
             console.log("token in local storage", accessToken);
 
@@ -69,7 +71,7 @@ export default function Home({ logout }) {
         <>
             <div className="flex justify-between items-center py-4 px-8 bg-white shadow-md">
                 <div className="text-xl font-semibold text-gray-800">
-                    Hello, Ron!
+                    Hi {username}!
                 </div>
                 <div className="flex items-center space-x-4">
                     <div className="relative w-12 h-12 flex items-center justify-center">

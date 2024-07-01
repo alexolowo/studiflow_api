@@ -31,6 +31,7 @@ export default function LoginForm() {
                 const data = await response.json();
                 localStorage.setItem('accessToken', data.token.access);
                 localStorage.setItem('refreshToken', data.token.refresh);
+                localStorage.setItem('username', data.user);
                 // router.push('/home');
                 router.push('/');
             } else {
