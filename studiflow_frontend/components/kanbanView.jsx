@@ -3,9 +3,9 @@ import Column from "./column";
 
 export default function KanbanView() {
     const [tasks, setTasks] = useState([
-        { id: 1, title: 'Task 1', description: 'Submission whatever', status: 'todo' },
-        { id: 2, title: 'Task 2', description: 'Some more description here', status: 'inProgress' },
-        { id: 3, title: 'Task 3', description: 'Oh my oh my', status: 'done' },
+        { id: 1, title: 'Task 1', description: 'Submission whatever', status: 'todo', course: 'CSC207' },
+        { id: 2, title: 'Task 2', description: 'Some more description here', status: 'inProgress', course: 'CSC148' },
+        { id: 3, title: 'Task 3', description: 'Oh my oh my', status: 'done', course: 'MAT135' },
     ]);
 
     const columns = [
