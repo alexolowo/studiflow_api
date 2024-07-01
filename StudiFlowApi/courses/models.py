@@ -18,7 +18,7 @@ class Course(models.Model):
     """
     id = models.IntegerField(primary_key=True)
     course_code = models.CharField(max_length=255)
-    course_name = models.CharField(max_length=200, null=False, default='Default Course Name')
+    name = models.CharField(max_length=200, null=False, default='Default Course Name')
     is_lecture = models.BooleanField(default=False)
     enrollment_term_id = models.IntegerField(blank=False, null=False)
     user = models.ManyToManyField('users.User', related_name='lecture_courses')

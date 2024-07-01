@@ -79,10 +79,12 @@ class LoadUserCoursesView(generics.GenericAPIView):
                         continue
 
                     if "LEC" in received_course_code[2] or not re.search(SECTION_PATTERN, course_code):
+                        course_name = course_data["name"]
+                        colon_index = course_name.find(":")
                         course = Course(
                             id=course_data["id"],
                             course_code=course_data["course_code"].split()[0],
-                            course_name=course_data["name"],
+                            name=course_name[colon_index+1:].strip() if colon_index != -1 else course_name.strip(),
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
                         )
@@ -128,7 +130,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
 
             return Response(
                 status=status.HTTP_200_OK,
-                data={"message": "User courses retrieved and saved successfully.", "courses": courses_data},
+                data={"message": "User courses retrieved and saved successfully.",},
             )
 
         return Response(data={"error": "Failed to retrieve user courses."}, status=status.HTTP_400_BAD_REQUEST)
