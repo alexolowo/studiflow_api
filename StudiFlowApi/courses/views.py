@@ -108,6 +108,13 @@ class LoadUserCoursesView(generics.GenericAPIView):
                             section.section_courses.append(course_data["id"])
                         section.save()
 
+                    elif is_existing_course_or_section:
+                        received_courses = Course.objects.get(id=course_data["id"])
+
+                        if received_courses:
+                            received_courses.user.add(request.user)
+
+
             return Response(
                 status=status.HTTP_200_OK,
                 data={"message": "User courses retrieved and saved successfully."},
@@ -144,4 +151,5 @@ class RetrieveUserCoursesView(generics.ListAPIView):
 
         """
         user = self.request.user
+        print(user.lecture_courses.all())
         return user.lecture_courses.all()

@@ -92,7 +92,7 @@ export default function ListViewCourses() {
             } catch (e) {
                 setError(e.message);
                 console.error("There was a problem fetching the courses:");
-                console.log(e);
+                console.error(e);
             }
 
         };
