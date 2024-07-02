@@ -1,34 +1,34 @@
 from django.db import models
-from user_courses.models import UserCourse
+from courses.models import Course
 from resources.models import Resource
 
 # Create your models here.
-'''
-_summary_: This class is going to be for canvas 
-courses tasks that a user has at the moment
-
-id: int
-course_id: int
-task_name: str
-task_type: str
-task_description: str
-due_date: datetime
-status: str
-resources: [id of resources]
-submission_link: str
-submission_status: str
-weight: float
-'''
-
 class Task(models.Model):
+    '''
+    Represents a task for a canvas course that a user has at the moment.
+
+    Attributes:
+        id (int): The unique identifier for the task.
+        task_name (str): The name of the task.
+        task_type (str): The type of the task.
+        task_description (str): The description of the task.
+        due_date (datetime): The due date of the task.
+        status (str): The status of the task.
+        submission_link (str): The link for task submission (optional).
+        weight (float): The weight of the task.
+        course (Course): The course to which the task belongs.
+
+    Relationships:
+        - A task belongs to a course (many-to-one relationship).
+        - A task can have multiple associated resources (many-to-many relationship).
+    '''
+
     id = models.IntegerField(primary_key=True)
     task_name = models.CharField(max_length=255)
     task_type = models.CharField(max_length=255)
     task_description = models.TextField()
     due_date = models.DateTimeField()
     status = models.CharField(max_length=255)
-    resources = models.ManyToManyField(Resource, related_name='resources')
-    submission_link = models.CharField(max_length=255)
-    submission_status = models.CharField(max_length=255)
+    submission_link = models.CharField(max_length=255, null=True)
     weight = models.FloatField()
-    course = models.ForeignKey(UserCourse, on_delete=models.CASCADE, related_name='tasks')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='tasks')
