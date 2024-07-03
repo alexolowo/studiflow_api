@@ -51,7 +51,7 @@ export default function SignUpPage() {
 
   return (
     <div className="flex h-screen">
-      {/* Green promotional section */}
+      {/* Green section */}
       <div className="hidden lg:flex lg:w-1/2 bg-emerald-600 text-white p-12 flex-col justify-center items-center">
         <h1 className="text-4xl font-bold mb-6">Join Our Community</h1>
         <p className="text-xl text-center">
