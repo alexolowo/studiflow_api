@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,23 +13,36 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const router = useRouter();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('http://localhost:8000/auth/login/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({ email, password }),
             });
 
-            if (!response.ok) {
-                throw new Error('Login failed');
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('accessToken', data.token.access);
+                localStorage.setItem('refreshToken', data.token.refresh);
+                // TODO: User is undefined
+                localStorage.setItem('username', data.user);
+                console.log("data", data);
+                router.push('/');
+            } else {
+                const data = await response.json();
+                console.log(data.message);
+                setError('Login failed. Please check your credentials.');
             }
-            router.push('/');
-        } catch (err) {
-            setError('Invalid email or password. Please try again.');
+        } catch (error) {
+            setError('An error occurred. Please try again.');
+            console.error('Login error:', error);
         }
     };
 
