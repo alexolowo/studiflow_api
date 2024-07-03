@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import StepIndicator from '@/components/StepIndicator';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
@@ -17,6 +19,7 @@ export default function SignUpPage() {
   const [apiKey, setApiKey] = useState('');
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
+  const router = useRouter();
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -59,11 +62,15 @@ export default function SignUpPage() {
         // {
         //   "message": "User created successfully",
         //     "data": {
-        //     "email": "ronald!@app.com",
+        //     "email": "ronald2@app.com",
         //       "username": "ron",
         //         "canvas_token": "tbd",
         //           "session_avg": 0.0,
         //             "courses": []
+        //   },
+        //   "token": {
+        //     "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyMDEyMDY5MiwiaWF0IjoxNzIwMDM0MjkyLCJqdGkiOiI5N2IwOTgwNTE1NDk0YjU3ODI4NjhhNzRmMDhjNmYxYiIsInVzZXJfaWQiOjcxfQ.qZGcH9oIfGogDxvkPtbNTNfxp0RzsQ-ROpRqWJ4Demc",
+        //       "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIwMDQ1MDkyLCJpYXQiOjE3MjAwMzQyOTIsImp0aSI6IjhlN2EyNzcxOWI2NTQ3YWE4MmIwYzA4OTAxYzkwZmMwIiwidXNlcl9pZCI6NzF9.FLyhgS7pujoPsQ_SbzVUxMR1IoeHJgf5PEUJrci7vl8"
         //   }
         // }
 
@@ -72,7 +79,7 @@ export default function SignUpPage() {
           localStorage.setItem('accessToken', data.token.access);
           localStorage.setItem('refreshToken', data.token.refresh);
           // TODO: User is undefined
-          localStorage.setItem('username', data.user);
+          localStorage.setItem('username', data.username);
           console.log("data", data);
           router.push('/');
         } else {
@@ -93,7 +100,7 @@ export default function SignUpPage() {
     setTimeout(() => {
       setErrorMessage('');
     }, 5000)
-  }, [error])
+  }, [errorMessage])
 
   return (
     <div className="flex h-screen">
@@ -117,9 +124,9 @@ export default function SignUpPage() {
                 Already have an account? Log in
               </Link>
             </div>
-            {error && (
+            {errorMessage && (
               <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             )}
             <StepIndicator currentStep={step} totalSteps={2} />
@@ -179,7 +186,7 @@ export default function SignUpPage() {
                     <h3 className="text-lg font-semibold mb-2">How to get your API Key:</h3>
                     <ol className="list-decimal list-inside space-y-4 text-gray-800 text-sm">
                       <li className="pb-2 border-b border-gray-200">
-                        Navigate to the <a href="https://utoronto.instructure.com/profile/settings" className="text-blue-600 hover:text-blue-800 underline">UofT Canvas Settings page</a> and sign in with your UofT credentials.
+                        Navigate to the <a href="https://utoronto.instructure.com/profile/settings" className="text-blue-600 hover:text-blue-800 underline" target="_blank">UofT Canvas Settings page</a> and sign in with your UofT credentials.
                       </li>
                       <li className="pb-2 border-b border-gray-200">
                         Scroll down to the "Approved Integrations" section and click the <span className="font-semibold text-green-600">+ New Access Token</span> button.
