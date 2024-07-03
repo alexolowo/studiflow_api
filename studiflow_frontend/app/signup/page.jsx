@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
@@ -15,18 +15,38 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const validateEmail = (email) => {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!username) newErrors.username = "Username is required";
+    if (!email) newErrors.email = "Email is required";
+    else if (!validateEmail(email)) newErrors.email = "Invalid email format";
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 8) newErrors.password = "Password must be at least 8 characters long";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleNextStep = () => {
-    if (step === 1 && password === confirmPassword) {
+    if (validateForm()) {
       setStep(2);
     }
   };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    // Implement your sign-up logic here
-    // If successful, redirect to dashboard or home page
-    // router.push('/dashboard');
+    if (validateForm() && apiKey) {
+
+    } else {
+      setErrors(prev => ({...prev, apiKey: "API Key is required"}));
+    }
   };
 
   return (
@@ -55,33 +75,49 @@ export default function SignUpPage() {
             <form onSubmit={handleSignUp} className="space-y-4">
               {step === 1 ? (
                 <>
-                  <Input
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
+                  <div>
+                    <Input
+                      placeholder="Username *"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className={errors.username ? "border-red-500" : ""}
+                    />
+                    {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      type="email"
+                      placeholder="Email *"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className={errors.email ? "border-red-500" : ""}
+                    />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      type="password"
+                      placeholder="Password *"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className={errors.password ? "border-red-500" : ""}
+                    />
+                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      type="password"
+                      placeholder="Confirm Password *"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className={errors.confirmPassword ? "border-red-500" : ""}
+                    />
+                    {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+                  </div>
                   <Button type="button" onClick={handleNextStep} className="w-full bg-emerald-600 hover:bg-emerald-700">
                     Next
                   </Button>
@@ -97,12 +133,16 @@ export default function SignUpPage() {
                       <li>Copy the generated key and paste it below</li>
                     </ol>
                   </div>
-                  <Input
-                    placeholder="API Key"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    required
-                  />
+                  <div>
+                    <Input
+                      placeholder="API Key *"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      required
+                      className={errors.apiKey ? "border-red-500" : ""}
+                    />
+                    {errors.apiKey && <p className="text-red-500 text-xs mt-1">{errors.apiKey}</p>}
+                  </div>
                   <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
                     Create Account
                   </Button>
