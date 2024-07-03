@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CourseCard from "./courseCard";
+import { useRouter } from "next/navigation";
 
 // A helper function
 function parseCourses(data) {
@@ -21,6 +22,8 @@ function parseCourses(data) {
 
 export default function ListViewCourses() {
     const [error, setError] = useState('');
+    const router = useRouter();
+
     // const [data, setData] = useState([
     //     {
     //         courseCode: 'APS360',
@@ -66,8 +69,9 @@ export default function ListViewCourses() {
     //     }
     // ]);
     const [data, setData] = useState([]);
-    
+
     useEffect(() => {
+
         async function getCourses() {
             try {
                 const accessToken = localStorage.getItem('accessToken');
@@ -80,7 +84,15 @@ export default function ListViewCourses() {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json'
                     }
-                })
+                });
+
+                if (response.status === 401) {
+                    // Remove tokens and redirect to home page
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    router.push('/');
+                    return;
+                }
 
                 if (!response.ok) {
                     setError("Failed getting active courses");
@@ -94,11 +106,10 @@ export default function ListViewCourses() {
                 console.error("There was a problem fetching the courses:");
                 console.error(e);
             }
-
-        };
+        }
 
         getCourses();
-    }, [])
+    }, []);
 
     return (
         <div className="grid grid-cols-2 gap-4 w-full h-fit">
