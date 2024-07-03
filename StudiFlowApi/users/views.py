@@ -21,10 +21,13 @@ class SignUpView(generics.GenericAPIView):
         
         if serializer.is_valid():
             serializer.save()
+            user = authenticate(request=request, email=request.data['email'], password=request.data['password'])
+            tokens = create_tokens(user)
 
             response = {
                 'message': 'User created successfully',
-                'data': serializer.data
+                'data': serializer.data,
+                'token': tokens
             }
 
             return Response(data=response, status=status.HTTP_201_CREATED)
@@ -33,7 +36,7 @@ class SignUpView(generics.GenericAPIView):
     
 
 class LoginView(APIView):
-    permission_classes = []
+    permission_classes = [AllowAny]
     
     def post(self, request: Request):
         email = request.data.get('email')
