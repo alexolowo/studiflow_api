@@ -75,9 +75,7 @@ export default function ListViewCourses() {
         async function getCourses() {
             try {
                 const accessToken = localStorage.getItem('accessToken');
-
-                console.log("accessToken", accessToken);
-
+                
                 const response = await fetch('http://localhost:8000/courses/', {
                     method: 'GET',
                     headers: {
@@ -100,6 +98,7 @@ export default function ListViewCourses() {
                 }
 
                 const data = await response.json();
+                console.log(data);
                 data && setData(parseCourses(data.courses));
             } catch (e) {
                 setError(e.message);
