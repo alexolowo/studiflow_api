@@ -11,8 +11,8 @@ from .serializers import CourseSerializer
 from rest_framework.permissions import IsAuthenticated
 
 
-COURSE_CODE_PATTERN = r"[A-Z]{3,4}\d{3}H\d"
-SECTION_PATTERN = r"(TUT|PRA|LAB)"
+COURSE_CODE_PATTERN = r"[A-Z]{3,4}\d{3}[HY]\d"
+SECTION_PATTERN = r"(TUT|PRA|LAB|Tutorial|Practical|Laboratory)"
 
 class LoadUserCoursesView(generics.GenericAPIView):
     """
@@ -130,7 +130,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
 
             return Response(
                 status=status.HTTP_200_OK,
-                data={"message": "User courses retrieved and saved successfully.",},
+                data={"message": "User courses retrieved and saved successfully.", "courses": courses_data},
             )
 
         return Response(data={"error": "Failed to retrieve user courses."}, status=status.HTTP_400_BAD_REQUEST)
