@@ -78,10 +78,21 @@ export default function SignUpPage() {
           const data = await response.json();
           localStorage.setItem('accessToken', data.token.access);
           localStorage.setItem('refreshToken', data.token.refresh);
-          // TODO: User is undefined
           localStorage.setItem('username', data.username);
-          console.log("data", data);
-          router.push('/');
+          // We must also hit the endpoint api/courses/load_courses
+
+          const secondResponse = await fetch('http://localhost:8000/courses/load_courses', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${data.token.access}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          console.log(secondResponse);
+          if (secondResponse.ok) {
+            router.push('/');
+          }
+
         } else {
           const data = await response.json();
           console.log(data.message);
