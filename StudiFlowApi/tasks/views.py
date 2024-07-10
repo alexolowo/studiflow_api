@@ -3,57 +3,36 @@ from django.views import View
 from .models import Task
 from rest_framework.request import Request
 from rest_framework.response import Response
-import anthropic
+from prompts.prompts import AnthropicAPI
+from PyPDF2 import PdfReader
 import requests
+import io
 
 
-# Create your views here.
+bearer_token = ''
+headers = {"Authorization": f"Bearer {bearer_token}"}
+pages = ['syllabus', 'modules', 'assignments', 'quizzes', 'pages']
+anthropic_API = AnthropicAPI()
 
-client = anthropic.Anthropic()
+def get_canvas_api_response(course_id, page):
+    base_url = f"https://utoronto.instructure.com/api/v1/course/{course_id}/{page}"
 
-def is_syllabus_prompt(json_str):
-    prompt = f"""Given this JSON representing a course module, classify it as either:
-    1. A syllabus, course overview material, course information, or similar.
-    2. Not a syllabus, course overview material, course information, or similar.
+    response = requests.get(base_url, headers=headers)
 
-    JSON:
-    {json_str}
+    if response.status_code == 200:
+        return Response({response.json()}, status=response.status_code)
+    else:
+        return Response({'error': 'Failed to retrieve data'}, status=response.status_code)
 
-    Please provide your classification as only True or False. Nothing else."""
+class ImportSyllabusDistributionView(View):
 
-    # Make the API call
-    response = client.completions.create(
-        model="claude-3-sonnet-20240229",
-        prompt=prompt,
-        max_tokens_to_sample=300,
-    )
-    response_data = response.completion
-    print(response_data)
-    return response_data
-
-class ImportTasksView(View):
-    bearer_token = ''
-    headers = {"Authorization": f"Bearer {bearer_token}"}
-    pages = ['syllabus', 'modules', 'assignments', 'quizzes', 'pages']
-    
-    def get_canvas_api_response(self, course_id, page):
-        base_url = f"https://utoronto.instructure.com/api/v1/course/{course_id}/{page}"
-
-        response = requests.get(base_url, headers=self.headers)
-
-        if response.status_code == 200:
-            return Response({response.json()}, status=response.status_code)
-        else:
-            return Response({'error': 'Failed to retrieve data'}, status=response.status_code)
-    
-    def import_tasks_from_syllabus(self, course_id):
+    def import_distribution_from_syllabus(self, course_id):
         print('Course ID:', course_id)
         # Import tasks from the specified page
-        tasks = []
         
         # Logic to import tasks from Syllabus page
         # Check if the syllabus page exists
-        response = self.get_canvas_api_response(course_id, self.pages[0])
+        response = get_canvas_api_response(course_id, self.pages[0])
         
         if response.status_code == 200:
 
@@ -63,15 +42,20 @@ class ImportTasksView(View):
             if syllabus_page['type'] == 'File' :
                 # If it is a file, perform a get to the files url
                 syllabus_file_url = syllabus_page['url']
-                syllabus_file_response = requests.get(syllabus_file_url, headers=self.headers)
+                syllabus_file_response = requests.get(syllabus_file_url, headers=headers)
                 if syllabus_file_response.status_code == 200:
-                    syllabus_file_data = syllabus_file_response.json()
+                    file_format = syllabus_file_response.headers.get('Content-Type')
+                    distribution = AnthropicAPI.get_distribution_from_syllabus(file_format, syllabus_file_response.json())
+                    return distribution
+                else:
+                    print('Failed to retrieve file')
+
                     # Process the syllabus file data and create task objects
                     # ...
             elif syllabus_page['type'] == 'Page':
                 # If it is a page, perform a get to the page text url
                 syllabus_page_text_url = syllabus_page['url']
-                syllabus_page_text_response = requests.get(syllabus_page_text_url, headers=self.headers)
+                syllabus_page_text_response = requests.get(syllabus_page_text_url, headers=headers)
                 if syllabus_page_text_response.status_code == 200:
                     syllabus_page_text_data = syllabus_page_text_response.json()
                     # Process the syllabus page text data and create task objects
@@ -92,10 +76,11 @@ class ImportTasksView(View):
                         if module_items_response.status_code == 200:
                             module_items = module_items_response.json()
                             for item in module_items:
-                                if item['type'] == 'Assignment' or item['type'] == 'Quiz':
+                                if item['type'].lower() in ['assignment', 'quiz']:
                                     # Process the module item data and create task objects
                                     # ...
                                     pass
+            elif item['type'].lower() in ['file', 'page', 'discussion', 'subheader', 'externalurl', 'externaltool'] and is_module_task_prompt(item) == 'True':
                     module_items_url = module['items_url']
                     module_items_response = requests.get(module_items_url)
                     if module_items_response.status_code == 200:
@@ -108,7 +93,11 @@ class ImportTasksView(View):
         # ...
         pass
         
-        return tasks
+        return
+
+# Create your views here.
+class ImportTasksView(View):
+    
     
     '''
 
@@ -148,9 +137,18 @@ class ImportTasksView(View):
         
         # Scan syllabus first to get and understand course/grade distribution
         try:
+            file_response = requests.get('https://utoronto.instructure.com/files/24345111/download?download_frd=1&verifier=hhwzaHI4J2thaBuCeyFBi5Az9fMhfgXRJAlgXX0G', headers=headers)
+            if file_response.status_code == 200:
+                file_format = file_response.headers.get('Content-Type')
+                distrib = anthropic_API.get_distribution_from_syllabus(file_format, file_response)
+                print(distrib)
+            else:
+                print('Failed to retrieve file')
+            
+            return
             user_courses = request.user.lecture_courses.all()
             course_id = user_courses[0].id
-            syllabus_tasks = self.import_tasks_from_syllabus(course_id)
+            syllabus_tasks = self.import_distribution_from_syllabus(course_id)
             # self.save_tasks_to_db(syllabus_tasks)
         except NotFoundError:
             print('Syllabus not found')

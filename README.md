@@ -32,6 +32,8 @@ Ensure you have Python installed on your machine. This project uses Python 3.8.
     pip3 install requests
     pip3 install django-cors-headers
     pip3 install anthropic
+    pip3 install PyPDF2
+    pip3 install python-docx Pillow pytesseract
     ```
 
 ## Running the Application
