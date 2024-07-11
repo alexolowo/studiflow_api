@@ -48,7 +48,8 @@ class LoginView(APIView):
             tokens = create_tokens(user)
             response = {
                 'message': 'User logged in successfully',
-                'token': tokens
+                'token': tokens,
+                'user': user.username
             }
             login(request, user)
             

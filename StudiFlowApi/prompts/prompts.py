@@ -75,7 +75,7 @@ class AnthropicAPI():
     Provide your response in JSON format with the following categories, each scored out of 100 based on their weight in the syllabus:
     
     {{
-    "assignments": 0,
+    "homework": 0,
     "quizzes": 0,
     "tests": 0,
     "projects": 0,
@@ -85,13 +85,21 @@ class AnthropicAPI():
     
     If a category is not present in the syllabus, leave it as 0. 
     Associate similar terms with the closest category. For example:
-    - "practical" should be associated with "labs"
-    - "problem set" should be associated with "assignments"
+    - "practical" or anything with "lab" in the name/description should be associated with "labs"
+        - lab report, lab preparation, lab assignment etc.
+    - "problem set" should be associated with "homework"
+        - assignment, problem solving, problem set etc.
+    - "midterm" should be associated with "exams"
+        - final exam, midterm exam, etc.
+    - "project" should be associated with "projects"
+        - group project, individual project, project presentation, etc.
+    - "test" should be associated with "tests"
+        - term test, bi weekly test, etc.
     
     Ensure that the total of all categories does not exceed 100.
     
     Syllabus content:
-    {text_content[:3000]}  # Limiting to first 3000 characters for brevity
+    {text_content}  # Limiting to first 3000 characters for brevity
     
     Provide only the JSON response without any additional explanation.
 
@@ -100,14 +108,15 @@ Assistant: Here is the JSON response based on the syllabus content:
 """
 
         response = self.client.messages.create(
-            model="claude-3-5-sonnet-20240620",
+            model="claude-3-haiku-20240307",
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}],
         )
 
         # Parse the JSON response
         try:
-            distribution = json.loads(response.model_dump_json())
+            distribution = json.loads(response.content[0].text)
+            
         except json.JSONDecodeError:
             raise ValueError("Failed to parse JSON from Anthropic API response")
 
@@ -117,5 +126,5 @@ Assistant: Here is the JSON response based on the syllabus content:
             if key not in distribution:
                 distribution[key] = 0
         # Print the JSON in a readable format
-        print(json.dumps(distribution, indent=4))
+        # print(json.dumps(distribution, indent=4))
         return distribution

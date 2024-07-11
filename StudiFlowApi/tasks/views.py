@@ -11,7 +11,7 @@ import io
 
 bearer_token = ''
 headers = {"Authorization": f"Bearer {bearer_token}"}
-pages = ['syllabus', 'modules', 'assignments', 'quizzes', 'pages']
+pages = ['syllabus', 'pages', 'modules', 'assignments', 'quizzes']
 anthropic_API = AnthropicAPI()
 
 def get_canvas_api_response(course_id, page):
@@ -35,7 +35,7 @@ class ImportSyllabusDistributionView(View):
         response = get_canvas_api_response(course_id, self.pages[0])
         
         if response.status_code == 200:
-
+#TODO: complete this logic for looking for a syllabus in pages, modules, files, syllabus
             # If it exists, make the request to the API to get the syllabus page
             syllabus_page = response.data
 
@@ -48,7 +48,7 @@ class ImportSyllabusDistributionView(View):
                     distribution = AnthropicAPI.get_distribution_from_syllabus(file_format, syllabus_file_response.json())
                     return distribution
                 else:
-                    print('Failed to retrieve file')
+                    raise Exception('Failed to retrieve file')
 
                     # Process the syllabus file data and create task objects
                     # ...
@@ -137,11 +137,12 @@ class ImportTasksView(View):
         
         # Scan syllabus first to get and understand course/grade distribution
         try:
-            file_response = requests.get('https://utoronto.instructure.com/files/24345111/download?download_frd=1&verifier=hhwzaHI4J2thaBuCeyFBi5Az9fMhfgXRJAlgXX0G', headers=headers)
+            file_response = requests.get('https://utoronto.instructure.com/files/14343835/download?download_frd=1&verifier=By09qf3VxLIT1fBHWyiRuG5f73S1PCqtBh8rjvV0', headers=headers)
             if file_response.status_code == 200:
                 file_format = file_response.headers.get('Content-Type')
-                distrib = anthropic_API.get_distribution_from_syllabus(file_format, file_response)
-                print(distrib)
+                distribution = anthropic_API.get_distribution_from_syllabus(file_format, file_response)
+                print(distribution)
+                
             else:
                 print('Failed to retrieve file')
             
