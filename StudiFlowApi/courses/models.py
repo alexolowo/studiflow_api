@@ -22,6 +22,7 @@ class Course(models.Model):
     is_lecture = models.BooleanField(default=False)
     enrollment_term_id = models.IntegerField(blank=False, null=False)
     user = models.ManyToManyField('users.User', related_name='lecture_courses')
+    distribution = models.JSONField(null=True)
     
     
     # syllabus = models.OneToOneField('Syllabus', on_delete=models.CASCADE, related_name='user_courses_syllabus')
