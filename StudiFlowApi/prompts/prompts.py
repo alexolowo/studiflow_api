@@ -9,7 +9,7 @@ import json
 
 class AnthropicAPI():
 
-    client = anthropic.Anthropic()
+    CLIENT = anthropic.Anthropic()
 
     def is_syllabus_prompt(self, json_str):
         prompt = f"""Given this JSON representing a course module, classify it as either:
@@ -22,10 +22,10 @@ class AnthropicAPI():
         Please provide your classification as only True or False. Nothing else."""
 
         # Make the API call
-        response = self.client.completions.create(
-            model="claude-3-sonnet-20240229",
-            prompt=prompt,
-            max_tokens_to_sample=300,
+        response = self.CLIENT.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
         )
         response_data = response.completion
         print(response_data)
@@ -42,8 +42,8 @@ class AnthropicAPI():
         Please provide your classification as only True or False. Nothing else."""
 
         # Make the API call
-        response = self.client.completions.create(
-            model="claude-3-sonnet-20240229",
+        response = self.CLIENT.completions.create(
+            model="claude-3-haiku-20240307",
             prompt=prompt,
             max_tokens_to_sample=300,
         )
@@ -61,7 +61,7 @@ class AnthropicAPI():
                 docx_file = io.BytesIO(api_response.content)
                 document = Document(docx_file)
                 return "\n".join([paragraph.text for paragraph in document.paragraphs])
-            elif 'txt' in file_type:
+            elif 'txt' in file_type or 'text' in file_type or 'html' in file_type or 'json' in file_type or 'csv' in file_type:
                 return api_response.text
             elif 'png' in file_type or 'jpeg' in file_type or 'jpg' in file_type:
                 image = Image.open(io.BytesIO(api_response.content))
@@ -107,7 +107,7 @@ Assistant: Here is the JSON response based on the syllabus content:
 
 """
 
-        response = self.client.messages.create(
+        response = self.CLIENT.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}],
@@ -128,3 +128,108 @@ Assistant: Here is the JSON response based on the syllabus content:
         # Print the JSON in a readable format
         # print(json.dumps(distribution, indent=4))
         return distribution
+    
+    
+    def is_syllabus_in_front_page(self, json_str):
+        tools = [
+            {
+                "name": "front_page_analysis",
+                "description": "Analyze the front page of a course to determine if the syllabus is present",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "values": {
+                            "is_syllabus_present": {
+                            "type": "string", 
+                            "description": "'True' if the syllabus is present, 'False' otherwise"
+                            },
+                            "url": {
+                                "type": "string", 
+                                "description": 'URL of the syllabus if present, otherwise "N/A"'
+                            },
+                        }
+                    },
+                    "required": ['values']
+                }
+            }
+        ]
+        prompt = f"""
+        Human:Given this JSON representing a course front page, determine if the syllabus is contained in the body
+        of the page.
+        
+        JSON:
+        {json_str}
+
+        use the front_page_analysis tool.
+
+        Assistant: Here is the response based on the JSON provided:
+        """
+
+        response = self.CLIENT.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
+            tools=tools
+        )
+
+        print(response.content)
+
+        json_summary = None
+        for content in response.content:
+            if content.type == "tool_use" and content.name == "front_page_analysis":
+                json_summary = content.input
+                break
+        
+        return json.dumps(json_summary, indent=2)
+    
+
+    def is_syllabus_a_link(self, api_response):
+        tools = [
+            {
+                "name": "syllabus_link_analysis",
+                "description": "Analyze the html of a page to see if the syllabus is present and \
+                    if it is a link, attach the base url of 'https://utoronto.instructure.com' if needed",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "values": {
+                            "is_syllabus_present": {
+                            "type": "string", 
+                            "description": "'True' if the syllabus is present, 'False' otherwise"
+                            },
+                            "url": {
+                                "type": "string", 
+                                "description": 'URL of the syllabus if present, otherwise "N/A"'
+                            },
+                        }
+                    },
+                    "required": ['values']
+                }
+            }
+        ]
+        prompt = f"""Human: Given this HTML response from the API, determine if the syllabus is a link.
+        
+        HTML Response:
+        {api_response}
+        
+        use the syllabus_link_analysis tool.
+        
+        Assistant: Here is the response based on the HTML provided:
+        """
+
+        response = self.CLIENT.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=300,
+            messages=[{"role": "user", "content": prompt}],
+            tools=tools
+        )
+
+        print(response.content)
+
+        json_summary = None
+        for content in response.content:
+            if content.type == "tool_use" and content.name == "syllabus_link_analysis":
+                json_summary = content.input['values']
+                break
+        
+        return json.dumps(json_summary, indent=2)
