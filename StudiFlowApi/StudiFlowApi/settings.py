@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'resources.apps.ResourcesConfig',
     'courses.apps.CoursesConfig',
     'sections.apps.SectionsConfig',
+    'distributions.apps.DistributionsConfig',
     'corsheaders',
 ]
 
