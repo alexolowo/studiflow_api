@@ -4,7 +4,7 @@ from .models import Distribution
 from rest_framework.request import Request
 from rest_framework import status
 from rest_framework.response import Response
-from prompts.prompts import AnthropicAPI
+from prompts.syllabus_prompts import AnthropicAPI
 import requests
 from courses.models import Course
 import json
@@ -32,7 +32,7 @@ def set_course_distribution(user, course_id, distribution):
         course = Course.objects.filter(id=course_id).exists()
         if course and distribution:
             distribution = Distribution.objects.create(distribution=distribution)
-            distribution.course = course_id
+            distribution.course_id = course_id
             distribution.user = user
             distribution.save()
         return True

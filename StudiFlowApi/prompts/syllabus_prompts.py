@@ -104,7 +104,7 @@ class AnthropicAPI():
         JSON:
         {json_str}
 
-        use the module_syllabus_analysis tool.
+        use the module__item_syllabus_analysis tool.
 
         Assistant: Here is the response based on the JSON provided:
         """

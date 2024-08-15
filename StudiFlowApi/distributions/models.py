@@ -11,7 +11,7 @@ class Distribution(models.Model):
     other_weight = models.IntegerField(default=0)
     other_description = models.CharField(max_length=255, null=True)
     total_points = models.IntegerField(default=100)
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='distributions')
+    course_id = models.IntegerField(default=0)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='distributions')
     id = models.IntegerField(primary_key=True)
 

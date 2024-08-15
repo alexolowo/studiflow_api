@@ -26,9 +26,19 @@ class Task(models.Model):
     id = models.IntegerField(primary_key=True)
     task_name = models.CharField(max_length=255)
     task_type = models.CharField(max_length=255)
-    task_description = models.TextField()
-    due_date = models.DateTimeField()
+    task_description = models.TextField(null=True)
+    due_date = models.DateTimeField(null=True)
     status = models.CharField(max_length=255)
     submission_link = models.CharField(max_length=255, null=True)
-    weight = models.FloatField()
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='tasks')
+    weight = models.FloatField(default=0)
+    points_possible = models.FloatField(default=0)
+    html_url = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='tasks', default=0)
+    course_id = models.IntegerField(default=0)
+
+    REQUIRED_FIELDS = ['task_name', 'task_type', 'html_url', 'course_id', 'user', 'id']
+
+    def __str__(self):
+        return self.task_name
+    
+    
