@@ -4,10 +4,17 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import CourseSideNav from '@/components/CourseSideNav';
 import Chat from '@/components/chat';
+import TaskList from '@/components/taskList';
 
 export default function CourseView() {
     const params = useParams();
     const courseId = params.courseID;
+    const dummyTask = {
+        id: 1,
+        title: "Dummy Task",
+        dueDate: "2022-12-31",
+        description: "This is a dummy task description.",
+    };
     const [activeTab, setActiveTab] = useState('chat');
 
     const renderContent = () => {
@@ -15,7 +22,7 @@ export default function CourseView() {
             case 'chat':
                 return <Chat courseId={courseId}/>
             case 'tasks':
-                return <div>Tasks Content</div>;
+                return <TaskList tasks={[dummyTask]} />;
             case 'resources':
                 return <div>Resources Content</div>;
             default:
