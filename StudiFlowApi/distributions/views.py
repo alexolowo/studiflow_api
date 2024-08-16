@@ -8,6 +8,7 @@ from prompts.syllabus_prompts import AnthropicAPI
 import requests
 from courses.models import Course
 import json
+from rest_framework.permissions import IsAuthenticated
 
 IMPORT_PAGES = ['front_page', 'tabs' , 'modules']
 ANTHROPIC_PROMPTS = AnthropicAPI()
@@ -40,6 +41,8 @@ def set_course_distribution(user, course_id, distribution):
         return False
 
 class ImportSyllabusDistributionView(View):
+    permission_classes = [IsAuthenticated]
+
     BEARER_TOKEN =''
     HEADERS = ''
     USER = None

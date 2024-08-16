@@ -9,11 +9,13 @@ from prompts.task_prompts import AnthropicAPI
 import requests
 from courses.models import Course
 import json
+from typing import List
+from django.db.models import QuerySet
+from rest_framework.permissions import IsAuthenticated
 
-IMPORT_PAGES = ['assignments', 'quizzes' , 'modules']
+IMPORT_PAGES: List[str] = ['assignments', 'quizzes' , 'modules']
 ANTHROPIC_PROMPTS = AnthropicAPI()
-NO_FRONT_PAGE = "No front page has been set"
-SYLLABUS_ALIASES = ['syllabus', 'course information', 'course overview', 'overview', 'breakdown']
+NO_FRONT_PAGE: str = "No front page has been set"
 
 
 def get_canvas_api_response(course_id, page, headers):
@@ -31,11 +33,14 @@ def get_canvas_api_response(course_id, page, headers):
 # Create your views here.
 
 class ImportTasksView(View):
+
+    permission_classes = [IsAuthenticated]
+
     BEARER_TOKEN =''
     HEADERS = ''
     USER = None
 
-    def get_tasks_from_assignments(self, course_id):
+    def get_tasks_from_assignments(self, course_id: int) -> List[Task]:
         response = get_canvas_api_response(course_id, IMPORT_PAGES[0], headers=self.HEADERS)
         tasks = []
         if response.status_code == 200:
@@ -56,7 +61,7 @@ class ImportTasksView(View):
         
         return tasks
    
-    def get_tasks_from_quizzes(self, course_id):
+    def get_tasks_from_quizzes(self, course_id: int) -> List[Task]:
         response = get_canvas_api_response(course_id, IMPORT_PAGES[1], headers=self.HEADERS)
         tasks = []
         if response.status_code == 200:
@@ -77,7 +82,7 @@ class ImportTasksView(View):
         
         return tasks
     
-    def get_tasks_from_modules(self, course_id):
+    def get_tasks_from_modules(self, course_id: int) -> List[Task]:
         tasks = []
         response = get_canvas_api_response(course_id, IMPORT_PAGES[2],headers=self.HEADERS)
         if response.status_code == 200:
@@ -106,33 +111,45 @@ class ImportTasksView(View):
         return tasks    
 
 
-    def import_tasks_from_course(self, course_id):
+    def import_tasks_from_course(self, course_id: int) -> dict[str, list]:
+        already_scanned_set = set()
         tasksFound = {
                 'assignments': [],
                 'quizzes': [],  
                 'modules': []                    
             }
         serializer_class = TaskSerializer
+        user_tasks = Task.objects.filter(user=self.USER, course_id=course_id).values_list('task_name', flat=True)
             
         assignment_tasks= self.get_tasks_from_assignments(course_id)
         if len(assignment_tasks)>0:
             assignment_tasks = serializer_class(assignment_tasks, many=True)
-            tasksFound['assignments']=(assignment_tasks.data)
+            for task in assignment_tasks.data:
+                if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
+                    already_scanned_set.add(task['task_name'])
+                    tasksFound['assignments'].append(task)
         
         quiz_tasks = self.get_tasks_from_quizzes(course_id)
         if len(quiz_tasks)>0:
             quiz_tasks = serializer_class(quiz_tasks, many=True)
-            tasksFound['quizzes']=(quiz_tasks.data)
+            for task in quiz_tasks.data:
+                if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
+                    already_scanned_set.add(task['task_name'])
+                    tasksFound['quizzes'].append(task)
+            
         
         module_tasks = self.get_tasks_from_modules(course_id)
         if len(module_tasks)>0:
             module_tasks = serializer_class(module_tasks, many=True)
-            tasksFound['modules']=(module_tasks.data)
+            for task in module_tasks.data:
+                if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
+                    already_scanned_set.add(task['task_name'])
+                    tasksFound['modules'].append(task)
 
         return tasksFound
 
 
-    def save_tasks_to_db(self, tasks):
+    def save_tasks_to_db(self, tasks: dict[str, list[Task]]):
         for task_list in tasks.values():
             for task in task_list:
                 task.save()
@@ -142,12 +159,11 @@ class ImportTasksView(View):
         self.HEADERS = {"Authorization": f"Bearer {self.BEARER_TOKEN}"}
         self.USER = request.user
         
-        user_courses = request.user.lecture_courses.all()
-        data = {}
+        user_courses: QuerySet[Course] = request.user.lecture_courses.all()
+        data: dict[int, dict[str, list[Task]]] = {}
         for course in user_courses:
             course_id = course.id
             tasks = self.import_tasks_from_course(course_id)
-            # self.save_tasks_to_db(tasks)
             data[course_id] = tasks
             
             return JsonResponse(data={'message': 'Task Import Successful',
