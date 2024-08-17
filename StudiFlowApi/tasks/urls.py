@@ -2,5 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('load_tasks/', views.ImportTasksView.as_view(), name='task-list'),
+    path('load_tasks/', views.ImportTasksView.as_view(), name='task-import'),
+    path('<int:course_id>/', views.UserTasksView.as_view(), name='task-list-with-course'),
 ]

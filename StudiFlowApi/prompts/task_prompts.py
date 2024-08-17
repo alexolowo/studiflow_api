@@ -167,3 +167,13 @@ class AnthropicAPI():
         print(f"\nTesting Item {test}\n")
         
         return test.get('is_task_present', False) == True
+    
+    def summarize_text_prompt(self, text):
+        prompt = f"Please provide a detailed summary of the following in\
+                    bullet points for readability and adequate understanding.\
+                    The aim of this summary is to provide a student with enough context\
+                    to form a rough idea of what a task requires.:\n\n{text}\n\n \
+                    when responding, do not add any precursors. only provide the details and bullet points:"
+        
+        response = self.get_api_message(prompt, [])
+        return response.content[0].text

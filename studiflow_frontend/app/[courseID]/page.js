@@ -9,9 +9,11 @@ import TaskList from '@/components/taskList';
 export default function CourseView() {
     const params = useParams();
     const router = useRouter();
-    const courseId = params.courseID;
+    const courseId = params.courseID.split('-')[0];
+    const courseCode = params.courseID.split('-')[1];
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState(null);
+    const [importing, setImporting] = useState(false);
     // const dummyTask = {
     //     id: 1,
     //     title: "Dummy Task",
@@ -25,7 +27,7 @@ export default function CourseView() {
     // };
     const [activeTab, setActiveTab] = useState('chat');
 
-    function mapBackendFieldsToDummyTask(backendTask) {
+    function mapBackendFieldsToFrontendTask(backendTask) {
         return {
             id: backendTask.id,
             title: backendTask.task_name,
@@ -40,20 +42,62 @@ export default function CourseView() {
         };
     }
 
-    useEffect(() => {
+    async function getCourseTasks() {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            
+            const response = await fetch('http://localhost:8000/tasks/load_tasks/', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        async function getCourseTasks() {
+            if (response.status === 401) {
+                // Remove tokens and redirect to home page
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                router.push('/');
+                return;
+            }
+
+            if (!response.ok) {
+                setError("Failed getting active tasks");
+                throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log(data['data'][courseId]);
+            const parsedResults = data['data'][courseId].map((task)=>mapBackendFieldsToFrontendTask(task));
+            parsedResults && setTasks((prevState) => ([
+                ...prevState,
+                ...parsedResults,
+              ]));
+        } catch (e) {
+            setError(e.message);
+            console.error("There was a problem fetching the tasks:");
+            console.error(e);
+        }
+    }
+
+    useEffect(() => {
+        if(importing) 
+            getCourseTasks().catch((error)=> console.error('error importing tasks',error)).finally(()=>setImporting(false));
+    }, [importing]);
+
+    useEffect(() => {
+        async function getUsersCourseTasks() {
             try {
                 const accessToken = localStorage.getItem('accessToken');
                 
-                const response = await fetch('http://localhost:8000/tasks/load_tasks/', {
+                const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    }
+                    },
                 });
-
+    
                 if (response.status === 401) {
                     // Remove tokens and redirect to home page
                     localStorage.removeItem('accessToken');
@@ -61,16 +105,15 @@ export default function CourseView() {
                     router.push('/');
                     return;
                 }
-
+    
                 if (!response.ok) {
                     setError("Failed getting active tasks");
                     throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
                 }
-
+    
                 const data = await response.json();
-                const key = courseId.split('-')[0];
-                console.log(data['data'][key]);
-                const parsedResults = data['data'][key].map((task)=>mapBackendFieldsToDummyTask(task));
+                console.log(data);
+                const parsedResults = data.map((task)=>mapBackendFieldsToFrontendTask(task));
                 parsedResults && setTasks(parsedResults);
             } catch (e) {
                 setError(e.message);
@@ -79,7 +122,8 @@ export default function CourseView() {
             }
         }
 
-        getCourseTasks();
+        getUsersCourseTasks();
+        
     }, []);
 
     const renderContent = () => {
@@ -87,7 +131,7 @@ export default function CourseView() {
             case 'chat':
                 return <Chat courseId={courseId}/>
             case 'tasks':
-                return <TaskList tasks={[ ...tasks]} />;
+                return <TaskList onImport={setImporting} tasks={[ ...tasks]} />;
             case 'resources':
                 return <div>Resources Content</div>;
             default:

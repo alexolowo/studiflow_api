@@ -1,6 +1,5 @@
-import re
+from hmac import new
 from django.http import JsonResponse
-# from django.views import APIView
 from .models import Task
 from .serializers import TaskSerializer
 from rest_framework.request import Request
@@ -56,7 +55,7 @@ class ImportTasksView(generics.GenericAPIView):
                 task.weight = assignment['points_possible']
                 task.points_possible = assignment['points_possible']
                 task.due_date = assignment['due_at']
-                task.course = Course.objects.get(id=course_id)
+                task.course_id = course_id
                 task.user = self.USER
                 tasks.append(task)
         
@@ -77,7 +76,7 @@ class ImportTasksView(generics.GenericAPIView):
                 task.weight = assignment['points_possible']
                 task.points_possible = assignment['points_possible']
                 task.due_date = assignment['due_at']
-                task.course = Course.objects.get(id=course_id)
+                task.course_id = course_id
                 task.user = self.USER
                 tasks.append(task)
         
@@ -145,14 +144,27 @@ class ImportTasksView(generics.GenericAPIView):
 
         return tasksFound
 
-
-    def save_tasks_to_db(self, tasks: dict[str, list[Task]]):
-        for task_list in tasks.values():
-            for task in task_list:
-                task.save()
+    def save_tasks_to_db(self, tasks: list):
+            for task in tasks:
+                new_task = Task.objects.create(
+                    id=task['id'],
+                    task_name=task['task_name'],
+                    task_type=task['task_type'],
+                    task_description=ANTHROPIC_PROMPTS.summarize_text_prompt(text=task['task_description']),
+                    due_date=task['due_date'],
+                    status=task['status'],
+                    submission_link=task['submission_link'],
+                    weight=task['weight'],
+                    points_possible=task['points_possible'],
+                    html_url=task['html_url'],
+                    user=self.USER,
+                    course_id=task['course_id'],
+                    notes=task['notes'],
+                    grade=task['grade'],
+                )
+                new_task.save()
 
     def get(self, request:Request):
-        print(request.headers)
         self.BEARER_TOKEN = request.user.canvas_token
         self.HEADERS = {"Authorization": f"Bearer {self.BEARER_TOKEN}"}
         self.USER = request.user
@@ -161,8 +173,20 @@ class ImportTasksView(generics.GenericAPIView):
         data: dict[int,list[Task]] = {}
         for course in user_courses:
             course_id = course.id
-            # tasks = self.import_tasks_from_course(course_id)
-            data[course_id] = {"tasks":"tasks"}
+            print(f"Importing tasks for course {course_id}")
+            tasks = self.import_tasks_from_course(course_id)
+            self.save_tasks_to_db(tasks)
+            data[course_id] = tasks
             
             return JsonResponse(data={'message': 'Task Import Successful',
                                   'data': data}, status=status.HTTP_200_OK)
+        
+
+class UserTasksView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request, course_id: int = None):
+        user = request.user
+        tasks = Task.objects.filter(user=user, course_id=course_id)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)

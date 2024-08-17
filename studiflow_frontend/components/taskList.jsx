@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
 } from './ui/dropdown-menu';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { FaRegEdit, FaPlus } from 'react-icons/fa';
 import { IoDownloadOutline } from 'react-icons/io5';
 import { Badge } from './ui/badge';
@@ -23,12 +23,13 @@ import { Separator } from './ui/separator';
 import { Loader2 } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 
-export default function TaskList({ tasks }) {
+export default function TaskList({ tasks, onImport }) {
   const [taskStatus, setTaskStatus] = useState({});
   const [taskNotes, setTaskNotes] = useState({});
   const [originalTaskStatus, setOriginalTaskStatus] = useState({});
   const [originalTaskNotes, setOriginalTaskNotes] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
+  const [importEnabled, setImportEnabled] = useState(false);
 
   useEffect(() => {
     const initialStatuses = {};
@@ -67,6 +68,18 @@ export default function TaskList({ tasks }) {
     }
   };
 
+  const handleImportButtonClick = () => {
+    onImport(true);
+    setImportEnabled(true);
+  };
+
+  useEffect(() => {
+    console.log('triggered');
+    if (importEnabled) {
+      setImportEnabled(false);
+    }
+  }, [tasks]);
+
   const getBadgeClass = (status) => {
     switch (status) {
       case 'DONE':
@@ -84,7 +97,7 @@ export default function TaskList({ tasks }) {
         <span>Tasks</span>
       </div>
       {tasks && (
-        <Accordion type="multiple" collapsible className="w-full">
+        <Accordion type="multiple" collapsible="true" className="w-full">
           {tasks.map((task) => (
             <div className="flex justify-between">
               <AccordionItem key={task.id} value={task.id} className="flex-grow">
@@ -172,10 +185,12 @@ export default function TaskList({ tasks }) {
           ))}
         </Accordion>
       )}
-      {tasks.length == 0 && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
+      {importEnabled && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button
+            onClick={handleImportButtonClick}
+            disabled={importEnabled}
             variant="ghost"
             className="fixed bottom-40 right-12 border h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300">
             <IoDownloadOutline size={40} className="color-gray-600" />
