@@ -31,10 +31,12 @@ class Task(models.Model):
     status = models.CharField(max_length=255)
     submission_link = models.CharField(max_length=255, null=True)
     weight = models.FloatField(default=0)
-    points_possible = models.FloatField(default=0)
+    points_possible = models.FloatField(default=100)
     html_url = models.CharField(max_length=255, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='tasks', default=0)
     course_id = models.IntegerField(default=0)
+    notes= models.TextField(null=True)
+    grade = models.FloatField(default=0)
 
     REQUIRED_FIELDS = ['task_name', 'task_type', 'html_url', 'course_id', 'user', 'id']
 

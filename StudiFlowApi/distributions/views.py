@@ -1,8 +1,7 @@
 from django.http import JsonResponse
-from django.views import View
 from .models import Distribution
 from rest_framework.request import Request
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from prompts.syllabus_prompts import AnthropicAPI
 import requests
@@ -40,7 +39,7 @@ def set_course_distribution(user, course_id, distribution):
     except Exception as e:
         return False
 
-class ImportSyllabusDistributionView(View):
+class ImportSyllabusDistributionView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     BEARER_TOKEN =''
