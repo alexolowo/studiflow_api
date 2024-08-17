@@ -13,13 +13,15 @@ import {
   DropdownMenuCheckboxItem,
 } from './ui/dropdown-menu';
 import { useEffect, useState } from 'react';
-import { FaRegEdit } from 'react-icons/fa';
+import { FaRegEdit, FaPlus } from 'react-icons/fa';
+import { IoDownloadOutline } from 'react-icons/io5';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Loader2 } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 
 export default function TaskList({ tasks }) {
   const [taskStatus, setTaskStatus] = useState({});
@@ -78,6 +80,9 @@ export default function TaskList({ tasks }) {
 
   return (
     <div className="max-w-screen-xl mx-auto pb-0 p-10 dark:bg-gray-800">
+      <div className="flex items-center py-8 px-8 text-4xl font-semibold text-gray-800">
+        <span>Tasks</span>
+      </div>
       {tasks && (
         <Accordion type="multiple" collapsible className="w-full">
           {tasks.map((task) => (
@@ -168,6 +173,30 @@ export default function TaskList({ tasks }) {
         </Accordion>
       )}
       {tasks.length == 0 && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button
+            variant="ghost"
+            className="fixed bottom-40 right-12 border h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300">
+            <IoDownloadOutline size={40} className="color-gray-600" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="mr-6 w-auto rounded-lg">
+          <p className="text-sm text-gray-600">Import Tasks</p>
+        </HoverCardContent>
+      </HoverCard>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Button
+            variant="ghost"
+            className="fixed bottom-12 right-12 border h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300">
+            <FaPlus size={40} className="color-gray-600" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="mr-6 w-auto rounded-lg">
+          <p className="text-sm text-gray-600">Create New Task</p>
+        </HoverCardContent>
+      </HoverCard>
     </div>
   );
 }

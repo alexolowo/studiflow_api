@@ -99,7 +99,7 @@ export default function CourseView() {
         <div className="flex h-screen">
             <CourseSideNav activeTab={activeTab} setActiveTab={setActiveTab} />
             <main className="flex-1">
-            <div className='flex items-center py-8 px-8 bg-gray-100 shadow-md text-xl font-semibold text-gray-800'>
+            <div className='flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800'>
                     {/* TODO: make a dropdown to switch courses from here */}
                     {courseId.split('-')[1]}
                 </div>
