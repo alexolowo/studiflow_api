@@ -1,9 +1,10 @@
+import re
 from django.http import JsonResponse
-from django.views import View
+# from django.views import APIView
 from .models import Task
 from .serializers import TaskSerializer
 from rest_framework.request import Request
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from prompts.task_prompts import AnthropicAPI
 import requests
@@ -32,7 +33,7 @@ def get_canvas_api_response(course_id, page, headers):
 
 # Create your views here.
 
-class ImportTasksView(View):
+class ImportTasksView(generics.GenericAPIView):
 
     permission_classes = [IsAuthenticated]
 
@@ -111,13 +112,9 @@ class ImportTasksView(View):
         return tasks    
 
 
-    def import_tasks_from_course(self, course_id: int) -> dict[str, list]:
+    def import_tasks_from_course(self, course_id: int) -> list:
         already_scanned_set = set()
-        tasksFound = {
-                'assignments': [],
-                'quizzes': [],  
-                'modules': []                    
-            }
+        tasksFound = []
         serializer_class = TaskSerializer
         user_tasks = Task.objects.filter(user=self.USER, course_id=course_id).values_list('task_name', flat=True)
             
@@ -127,7 +124,7 @@ class ImportTasksView(View):
             for task in assignment_tasks.data:
                 if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
                     already_scanned_set.add(task['task_name'])
-                    tasksFound['assignments'].append(task)
+                    tasksFound.append(task)
         
         quiz_tasks = self.get_tasks_from_quizzes(course_id)
         if len(quiz_tasks)>0:
@@ -135,7 +132,7 @@ class ImportTasksView(View):
             for task in quiz_tasks.data:
                 if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
                     already_scanned_set.add(task['task_name'])
-                    tasksFound['quizzes'].append(task)
+                    tasksFound.append(task)
             
         
         module_tasks = self.get_tasks_from_modules(course_id)
@@ -144,7 +141,7 @@ class ImportTasksView(View):
             for task in module_tasks.data:
                 if task['task_name'] not in already_scanned_set and not task['task_name'] in user_tasks:
                     already_scanned_set.add(task['task_name'])
-                    tasksFound['modules'].append(task)
+                    tasksFound.append(task)
 
         return tasksFound
 
@@ -155,16 +152,17 @@ class ImportTasksView(View):
                 task.save()
 
     def get(self, request:Request):
+        print(request.headers)
         self.BEARER_TOKEN = request.user.canvas_token
         self.HEADERS = {"Authorization": f"Bearer {self.BEARER_TOKEN}"}
         self.USER = request.user
         
         user_courses: QuerySet[Course] = request.user.lecture_courses.all()
-        data: dict[int, dict[str, list[Task]]] = {}
+        data: dict[int,list[Task]] = {}
         for course in user_courses:
             course_id = course.id
-            tasks = self.import_tasks_from_course(course_id)
-            data[course_id] = tasks
+            # tasks = self.import_tasks_from_course(course_id)
+            data[course_id] = {"tasks":"tasks"}
             
             return JsonResponse(data={'message': 'Task Import Successful',
                                   'data': data}, status=status.HTTP_200_OK)
