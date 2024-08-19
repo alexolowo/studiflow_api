@@ -1,4 +1,4 @@
-from hmac import new
+import difflib
 from django.http import JsonResponse
 from .models import Task
 from .serializers import TaskSerializer
@@ -185,8 +185,48 @@ class ImportTasksView(generics.GenericAPIView):
 class UserTasksView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
+    def task_similarity(self, task1, task2, threshold=0.95):
+        fields_to_compare = ['task_name', 'task_description', 'weight', 'points_possible']
+        total_similarity = 0
+        fields_compared = 0
+
+        for field in fields_to_compare:
+            value1 = getattr(task1, field)
+            value2 = getattr(task2, field)
+
+            if value1 is not None and value2 is not None:
+                if isinstance(value1, str) and isinstance(value2, str):
+                    field_similarity = difflib.SequenceMatcher(None, value1, value2).ratio()
+                elif isinstance(value1, (int, float)) and isinstance(value2, (int, float)):
+                    max_value = max(abs(value1), abs(value2))
+                    field_similarity = 1 - (abs(value1 - value2) / max_value) if max_value else 1
+                else:
+                    field_similarity = 1 if value1 == value2 else 0
+
+                total_similarity += field_similarity
+                fields_compared += 1
+
+        average_similarity = total_similarity / fields_compared if fields_compared > 0 else 0
+
+        return average_similarity >= threshold
+
     def get(self, request: Request, course_id: int = None):
         user = request.user
         tasks = Task.objects.filter(user=user, course_id=course_id)
         serializer = TaskSerializer(tasks, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request: Request, course_id: int = None):
+        user = request.user
+        tasks = Task.objects.filter(user=user, course_id=course_id)
+
+        for task in tasks:
+            if self.task_similarity(task, request.data):
+                return Response(data={'error': 'Task already exists',
+                                      'task': task}, status=status.HTTP_208_ALREADY_REPORTED)
+            
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
