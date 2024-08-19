@@ -22,13 +22,31 @@ import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { Loader2 } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
+import { TaskCreationForm } from './taskForm';
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerClose,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from './ui/drawer';
+import { Toaster } from './ui/toaster';
 
-export default function TaskList({ tasks }) {
+export default function TaskList({ tasks, onImport }) {
   const [taskStatus, setTaskStatus] = useState({});
   const [taskNotes, setTaskNotes] = useState({});
   const [originalTaskStatus, setOriginalTaskStatus] = useState({});
   const [originalTaskNotes, setOriginalTaskNotes] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
+  const [importEnabled, setImportEnabled] = useState(false);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+
+  const handleCreateTask = (values) => {
+    setDrawerOpen(false); // Close the drawer after form submission
+  };
 
   useEffect(() => {
     const initialStatuses = {};
@@ -67,6 +85,18 @@ export default function TaskList({ tasks }) {
     }
   };
 
+  const handleImportButtonClick = () => {
+    onImport(true);
+    setImportEnabled(true);
+  };
+
+  useEffect(() => {
+    console.log('triggered');
+    if (importEnabled) {
+      setImportEnabled(false);
+    }
+  }, [tasks]);
+
   const getBadgeClass = (status) => {
     switch (status) {
       case 'DONE':
@@ -79,19 +109,31 @@ export default function TaskList({ tasks }) {
   };
 
   return (
-    <div className="max-w-screen-xl mx-auto pb-0 p-10 dark:bg-gray-800">
-      <div className="flex items-center py-8 px-8 text-4xl font-semibold text-gray-800">
+    <div className="max-w-screen-xl mx-auto p-10 dark:bg-gray-800">
+      <div className="flex items-center pb-8 px-8 text-4xl font-semibold text-gray-800">
         <span>Tasks</span>
       </div>
       {tasks && (
-        <Accordion type="multiple" collapsible className="w-full">
+        <Accordion type="multiple" collapsible="true" className="w-full">
           {tasks.map((task) => (
             <div className="flex justify-between">
               <AccordionItem key={task.id} value={task.id} className="flex-grow">
                 <AccordionTrigger>
-                  <span className="text-2xl">{`${task.title}`}</span>
+                  <span className="text-2xl flex gap-8">
+                    {`${task.title}`}
+                    <Badge id="task-status" className={getBadgeClass(taskStatus[task.id])}>
+                      {taskStatus[task.id]}
+                    </Badge>
+                  </span>
                 </AccordionTrigger>
-                <AccordionContent>{`Due Date: ${new Date(task.dueDate)}`}</AccordionContent>
+                <AccordionContent>{`Due Date: ${new Date(task.dueDate).toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}`}</AccordionContent>
                 <AccordionContent>
                   <DropdownMenu>
                     <DropdownMenuTrigger>
@@ -172,12 +214,14 @@ export default function TaskList({ tasks }) {
           ))}
         </Accordion>
       )}
-      {tasks.length == 0 && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
+      {importEnabled && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button
+            onClick={handleImportButtonClick}
+            disabled={importEnabled}
             variant="ghost"
-            className="fixed bottom-40 right-12 border h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300">
+            className="fixed bottom-40 right-12 border bg-white h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300 hover:scale-110">
             <IoDownloadOutline size={40} className="color-gray-600" />
           </Button>
         </HoverCardTrigger>
@@ -187,16 +231,30 @@ export default function TaskList({ tasks }) {
       </HoverCard>
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Button
-            variant="ghost"
-            className="fixed bottom-12 right-12 border h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300">
-            <FaPlus size={40} className="color-gray-600" />
-          </Button>
+          <Drawer open={isDrawerOpen} onOpenChange={setDrawerOpen} direction="right">
+            <DrawerTrigger asChild>
+              <Button
+                variant="ghost"
+                className="fixed bottom-12 right-12 border bg-white h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300 hover:scale-110">
+                <FaPlus size={40} className="color-gray-600" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none">
+              <DrawerHeader>
+                <DrawerTitle className="py-4">New Task</DrawerTitle>
+                <DrawerDescription>
+                  Fill out the form below to create a new task and add it to the list.
+                </DrawerDescription>
+              </DrawerHeader>
+              <TaskCreationForm onCreated={handleCreateTask} />
+            </DrawerContent>
+          </Drawer>
         </HoverCardTrigger>
         <HoverCardContent className="mr-6 w-auto rounded-lg">
           <p className="text-sm text-gray-600">Create New Task</p>
         </HoverCardContent>
       </HoverCard>
+      <Toaster />
     </div>
   );
 }
