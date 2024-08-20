@@ -2,6 +2,7 @@
 import useAuth from "@/hooks/useAuth";
 import Home from "../components/home";
 import Banner from "@/components/banner";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function App() {
   const { isAuthenticated, logout } = useAuth();
@@ -16,6 +17,7 @@ export default function App() {
           <Banner />
         </div>
       )}
+      <Toaster />
     </div>
   );
 }

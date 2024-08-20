@@ -33,7 +33,7 @@ const taskSchema = z.object({
   notes: z.string().optional(),
 });
 
-export function TaskCreationForm({ task, onCreated }) {
+export function TaskCreationForm({ task, onConfirm }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -50,7 +50,7 @@ export function TaskCreationForm({ task, onCreated }) {
 
   // Submit handler
   function onSubmit(values: z.infer<typeof taskSchema>) {
-    onCreated(values);
+    onConfirm(values);
     toast({
       title: 'Task Created',
       description: 'The task has been created and added successfully!',
@@ -155,7 +155,7 @@ export function TaskCreationForm({ task, onCreated }) {
             )}
           />
 
-          <Button type="submit">Create Task</Button>
+          <Button type="submit">Save Task</Button>
         </form>
       </Form>
     </div>
