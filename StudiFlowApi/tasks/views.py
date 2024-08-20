@@ -7,11 +7,12 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 from prompts.task_prompts import AnthropicAPI
 import requests
-from courses.models import Course
 import json
 from typing import List
-from django.db.models import QuerySet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TaskFilter
 
 IMPORT_PAGES: List[str] = ['assignments', 'quizzes' , 'modules']
 ANTHROPIC_PROMPTS = AnthropicAPI()
@@ -237,3 +238,31 @@ class UserTasksView(generics.GenericAPIView):
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class TaskFilterView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TaskFilter
+    ordering_fields = ['status', 'due_date', 'weight', 'points_possible']
+
+    def get_queryset(self, user, course_id):
+        return Task.objects.filter(course_id=course_id, user=user)
+    
+    def get(self, request: Request, course_id: int):
+        
+        # Get the queryset
+        queryset = self.filter_queryset(self.get_queryset(request.user, course_id))
+        print(course_id)
+        print(queryset)
+        # Paginate the results
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        # If pagination is not required
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

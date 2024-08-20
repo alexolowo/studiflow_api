@@ -38,6 +38,10 @@ export default function EditProfileForm({ initialData }) {
     },
   });
 
+  const goBack = () => {
+    router.back();
+  };
+
   const onSubmit = async (values) => {
     console.log('Form Submitted:', values);
     try {
@@ -79,14 +83,8 @@ export default function EditProfileForm({ initialData }) {
     }
   };
 
-  const goBack = () => {
-    router.back();
-  };
-
-  // Watch all form fields
   const watchedValues = form.watch();
 
-  // Check if any form values have changed
   useEffect(() => {
     const hasChanges = Object.keys(watchedValues).some(
       (key) => watchedValues[key] !== initialData[key] || watchedValues[key] === ''

@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from './ui/use-toast';
 import { FaRegCheckCircle } from 'react-icons/fa';
+import React from 'react';
 
 // Define the schema for the form using Zod
 const taskSchema = z.object({

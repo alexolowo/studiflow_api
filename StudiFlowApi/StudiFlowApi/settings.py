@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'sections.apps.SectionsConfig',
     'distributions.apps.DistributionsConfig',
     'corsheaders',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
