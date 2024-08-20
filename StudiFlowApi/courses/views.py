@@ -132,6 +132,9 @@ class LoadUserCoursesView(generics.GenericAPIView):
                 status=status.HTTP_200_OK,
                 data={"message": "User courses retrieved and saved successfully.", "courses": courses_data},
             )
+        
+        elif response.status_code == 401:
+                return Response(data={'message': 'Unauthorized, canvas token likely expired'}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={"error": "Failed to retrieve user courses."}, status=status.HTTP_400_BAD_REQUEST)
     

@@ -42,6 +42,7 @@ class ImportTasksView(generics.GenericAPIView):
 
     def get_tasks_from_assignments(self, course_id: int) -> List[Task]:
         response = get_canvas_api_response(course_id, IMPORT_PAGES[0], headers=self.HEADERS)
+        
         tasks = []
         if response.status_code == 200:
             assignments = response.data
@@ -116,8 +117,9 @@ class ImportTasksView(generics.GenericAPIView):
         tasksFound = []
         serializer_class = TaskSerializer
         user_tasks = Task.objects.filter(user=self.USER, course_id=course_id).values_list('task_name', flat=True)
-            
+        
         assignment_tasks= self.get_tasks_from_assignments(course_id)
+        
         if len(assignment_tasks)>0:
             assignment_tasks = serializer_class(assignment_tasks, many=True)
             for task in assignment_tasks.data:
@@ -164,22 +166,27 @@ class ImportTasksView(generics.GenericAPIView):
                 )
                 new_task.save()
 
-    def get(self, request:Request):
+    def get(self, request:Request, course_id:int):
         self.BEARER_TOKEN = request.user.canvas_token
         self.HEADERS = {"Authorization": f"Bearer {self.BEARER_TOKEN}"}
         self.USER = request.user
         
-        user_courses: QuerySet[Course] = request.user.lecture_courses.all()
         data: dict[int,list[Task]] = {}
-        for course in user_courses:
-            course_id = course.id
-            print(f"Importing tasks for course {course_id}")
-            tasks = self.import_tasks_from_course(course_id)
-            self.save_tasks_to_db(tasks)
-            data[course_id] = tasks
+        print(f"Importing tasks for course {course_id}")
+        tasks = self.import_tasks_from_course(course_id)
+        self.save_tasks_to_db(tasks)
+        data[course_id] = tasks
             
-            return JsonResponse(data={'message': 'Task Import Successful',
-                                  'data': data}, status=status.HTTP_200_OK)
+        if len(tasks) == 0:
+            test_request = requests.get(f"https://utoronto.instructure.com/api/v1/courses/{course_id}/", headers=self.HEADERS)
+            if test_request.status_code == 200:
+                return JsonResponse(data={'message': 'No tasks found for this course'}, status=status.HTTP_204_NO_CONTENT)
+            elif test_request.status_code == 401:
+                return JsonResponse(data={'message': 'Unauthorized, canvas token likely expired'}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return JsonResponse(data={'error': 'Failed to retrieve data'}, status=test_request.status_code)
+        return JsonResponse(data={'message': 'Task Import Successful',
+                                'data': data}, status=status.HTTP_200_OK)
         
 
 class UserTasksView(generics.GenericAPIView):
@@ -222,7 +229,7 @@ class UserTasksView(generics.GenericAPIView):
 
         for task in tasks:
             if self.task_similarity(task, request.data):
-                return Response(data={'error': 'Task already exists',
+                return Response(data={'error': 'Similar task already exists',
                                       'task': task}, status=status.HTTP_208_ALREADY_REPORTED)
             
         serializer = TaskSerializer(data=request.data)

@@ -137,7 +137,14 @@ class ImportSyllabusDistributionView(generics.GenericAPIView):
                                     course_distribution_set = set_course_distribution(course_id=course_id, distribution=distribution, user=self.USER)
                                     return Response(data=distribution, status=200) if course_distribution_set else Response({'message': 'Failed to set course distribution'}, status=500)
         
-        return Response({'message': 'Syllabus not found via importing'}, status=404)
+         
+            test_request = requests.get(f"https://utoronto.instructure.com/api/v1/courses/{course_id}/", headers=self.HEADERS)
+            if test_request.status_code == 200:
+                return Response({'message': 'Syllabus not found via importing'}, status=404)
+            elif test_request.status_code == 401:
+                return JsonResponse(data={'message': 'Unauthorized, canvas token likely expired'}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return JsonResponse(data={'error': 'Failed to retrieve data'}, status=test_request.status_code)
     
     def setBearerToken(self, token):
         self.BEARER_TOKEN = token
