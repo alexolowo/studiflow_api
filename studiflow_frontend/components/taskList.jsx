@@ -53,18 +53,18 @@ export default function TaskList({ tasks, onImport, courseId }) {
   const [originalTaskNotes, setOriginalTaskNotes] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
   const [importEnabled, setImportEnabled] = useState(false);
-  const [isCreateDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [isEditDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [taskToBeEdited, setTaskToBeEdited] = useState(null);
 
   const handleCreateTask = (values) => {
-    setCreateDrawerOpen(false);
+    setIsCreateOpen(false);
   };
 
   const handleEditTask = (values) => {
-    setEditDrawerOpen(false);
+    setIsEditOpen(false);
   };
 
   function mapBackendFieldsToFrontendTask(backendTask) {
@@ -299,25 +299,29 @@ export default function TaskList({ tasks, onImport, courseId }) {
               </AccordionItem>
 
               <span className="mt-4" key={task.id + 12121}>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost">
-                      <FaRegEdit size={28} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Edit Task</DialogTitle>
-                      <DialogDescription>Edit Task Details.</DialogDescription>
-                    </DialogHeader>
-                    <TaskCreationForm task={task} onConfirm={handleEditTask} />
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsEditOpen(true);
+                    setTaskToBeEdited(task);
+                  }}>
+                  <FaRegEdit size={28} />
+                </Button>
               </span>
             </div>
           ))}
         </Accordion>
       )}
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>Edit Task Details.</DialogDescription>
+          </DialogHeader>
+          <TaskCreationForm isTypeEdit task={taskToBeEdited} onConfirm={handleEditTask} />
+        </DialogContent>
+      </Dialog>
 
       {importEnabled && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
 
@@ -338,7 +342,7 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Dialog>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"

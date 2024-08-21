@@ -6,10 +6,6 @@ import { useForm } from 'react-hook-form';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { Calendar } from './ui/calendar';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import {
   Form,
   FormControl,
@@ -29,13 +25,13 @@ import { DateTimePicker } from './ui/datetime-picker';
 const taskSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   description: z.string().optional(),
-  dueDate: z.date().optional(),
+  dueDate: z.string().optional(),
   weight: z.number().min(0).max(100).optional(),
   points: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
-export function TaskCreationForm({ task, onConfirm }) {
+export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -53,11 +49,20 @@ export function TaskCreationForm({ task, onConfirm }) {
   // Submit handler
   function onSubmit(values: z.infer<typeof taskSchema>) {
     onConfirm(values);
-    toast({
-      title: 'Task Created',
-      description: 'The task has been created and added successfully!',
-      action: <FaRegCheckCircle className="w-6 h-6" />,
-    });
+    if (isTypeEdit) {
+      toast({
+        title: 'Task Updated!',
+        description: 'The task has been updated successfully!',
+        action: <FaRegCheckCircle className="w-6 h-6" />,
+      });
+      return;
+    } else {
+      toast({
+        title: 'Task Created!',
+        description: 'The task has been created and added successfully!',
+        action: <FaRegCheckCircle className="w-6 h-6" />,
+      });
+    }
     // Handle task creation logic here
   }
 
