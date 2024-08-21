@@ -6,6 +6,8 @@ import CourseSideNav from '@/components/courseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
 
+
+
 export default function CourseView() {
     const params = useParams();
     const router = useRouter();
@@ -13,18 +15,7 @@ export default function CourseView() {
     const courseCode = params.courseID.split('-')[1];
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState(null);
-    const [importing, setImporting] = useState(false);
-    // const dummyTask = {
-    //     id: 1,
-    //     title: "Dummy Task",
-    //     dueDate: "2022-12-31",
-    //     description: "This is a dummy task description.",
-    //     link: "https://www.google.com",
-    //     notes: "These are some notes for the dummy task.",
-    //     status: "TO-DO",
-    //     weight: 10,
-    //     points: 100,
-    // };
+    
     const [activeTab, setActiveTab] = useState('chat');
 
     function mapBackendFieldsToFrontendTask(backendTask) {

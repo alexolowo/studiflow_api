@@ -34,19 +34,44 @@ import {
   DrawerFooter,
 } from './ui/drawer';
 import { Toaster } from './ui/toaster';
+import { useToast } from '@/components/ui/use-toast';
+import { FcCancel } from 'react-icons/fc';
+import { GiPartyPopper } from 'react-icons/gi';
 
-export default function TaskList({ tasks, onImport }) {
+export default function TaskList({ tasks, onImport, courseId }) {
   const [taskStatus, setTaskStatus] = useState({});
   const [taskNotes, setTaskNotes] = useState({});
   const [originalTaskStatus, setOriginalTaskStatus] = useState({});
   const [originalTaskNotes, setOriginalTaskNotes] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
   const [importEnabled, setImportEnabled] = useState(false);
-  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [isCreateDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [isEditDrawerOpen, setEditDrawerOpen] = useState(false);
+  const { toast } = useToast();
+  const [error, setError] = useState(null);
 
   const handleCreateTask = (values) => {
-    setDrawerOpen(false); // Close the drawer after form submission
+    setCreateDrawerOpen(false);
   };
+
+  const handleEditTask = (values) => {
+    setEditDrawerOpen(false);
+  };
+
+  function mapBackendFieldsToFrontendTask(backendTask) {
+    return {
+      id: backendTask.id,
+      title: backendTask.task_name,
+      description: backendTask.task_description,
+      dueDate: backendTask.due_date,
+      status: backendTask.status,
+      link: backendTask.submission_link || backendTask.html_url,
+      weight: backendTask.weight,
+      points: backendTask.points_possible,
+      notes: backendTask.notes,
+      grade: backendTask.grade,
+    };
+  }
 
   useEffect(() => {
     const initialStatuses = {};
@@ -86,16 +111,8 @@ export default function TaskList({ tasks, onImport }) {
   };
 
   const handleImportButtonClick = () => {
-    onImport(true);
     setImportEnabled(true);
   };
-
-  useEffect(() => {
-    console.log('triggered');
-    if (importEnabled) {
-      setImportEnabled(false);
-    }
-  }, [tasks]);
 
   const getBadgeClass = (status) => {
     switch (status) {
@@ -107,6 +124,66 @@ export default function TaskList({ tasks, onImport }) {
         return 'bg-gray-200 text-black';
     }
   };
+
+  async function getCourseTasks() {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:8000/tasks/load_tasks/${courseId}/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (response.status === 403) {
+        toast({
+          title: 'Tasks Could Not Be Imported',
+          description: 'You do not have permission, Your Canvas token may have expired',
+          action: <FcCancel className="w-12 h-12" />,
+        });
+        setError('Failed getting active tasks');
+        throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+      }
+
+      if (!response.ok) {
+        setError('Failed getting active tasks');
+        throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const parsedResults = data['data'][courseId].map((task) =>
+        mapBackendFieldsToFrontendTask(task)
+      );
+      parsedResults && onImport((prevState) => [...prevState, ...parsedResults]);
+      toast({
+        title: 'Tasks Imported',
+        description:
+          'Tasks have been successfully imported from Canvas!\nNote: Check that tasks are correct.',
+        action: <GiPartyPopper className="w-12 h-12" />,
+      });
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem fetching the tasks:');
+      console.error(e);
+    } finally {
+      setImportEnabled(false);
+    }
+  }
+
+  useEffect(() => {
+    if (importEnabled)
+      getCourseTasks().catch((error) => console.error('error importing tasks', error));
+  }, [importEnabled]);
 
   return (
     <div className="max-w-screen-xl mx-auto p-10 dark:bg-gray-800">
@@ -126,6 +203,7 @@ export default function TaskList({ tasks, onImport }) {
                     </Badge>
                   </span>
                 </AccordionTrigger>
+
                 <AccordionContent>{`Due Date: ${new Date(task.dueDate).toLocaleString('en-US', {
                   year: 'numeric',
                   month: 'short',
@@ -134,6 +212,7 @@ export default function TaskList({ tasks, onImport }) {
                   minute: '2-digit',
                   second: '2-digit',
                 })}`}</AccordionContent>
+
                 <AccordionContent>
                   <DropdownMenu>
                     <DropdownMenuTrigger>
@@ -163,9 +242,11 @@ export default function TaskList({ tasks, onImport }) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </AccordionContent>
+
                 {task.description && (
                   <AccordionContent>{`Description: ${task.description}`}</AccordionContent>
                 )}
+
                 <AccordionContent>
                   <div className="flex h-5 items-center space-x-4 text-sm text-gray-600">
                     {task.weight && <Label>Task Weight: {task.weight}%</Label>}
@@ -175,6 +256,7 @@ export default function TaskList({ tasks, onImport }) {
                     {task.points && <Label>Max. Points: {task.points}</Label>}
                   </div>
                 </AccordionContent>
+
                 <AccordionContent>
                   <Label htmlFor={`task-notes-${task.id}`}>Notes: </Label>
                   <div className="mx-4 my-2">
@@ -189,6 +271,7 @@ export default function TaskList({ tasks, onImport }) {
                     </p>
                   </div>
                 </AccordionContent>
+
                 <AccordionContent className="flex justify-between">
                   <div className="flex gap-6">
                     <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:from-purple-600 hover:via-pink-600 hover:to-indigo-600">
@@ -205,16 +288,30 @@ export default function TaskList({ tasks, onImport }) {
                   </Button>
                 </AccordionContent>
               </AccordionItem>
+
               <span className="mt-4" key={task.id + 12121}>
-                <Button variant="ghost">
-                  <FaRegEdit size={28} />
-                </Button>
+                <Drawer open={isEditDrawerOpen} onOpenChange={setEditDrawerOpen} direction="right">
+                  <DrawerTrigger asChild>
+                    <Button variant="ghost">
+                      <FaRegEdit size={28} />
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none bg-none">
+                    <DrawerHeader>
+                      <DrawerTitle className="py-4">Edit Task</DrawerTitle>
+                      <DrawerDescription>Edit Task Details.</DrawerDescription>
+                    </DrawerHeader>
+                    <TaskCreationForm task={task} onConfirm={handleEditTask} />
+                  </DrawerContent>
+                </Drawer>
               </span>
             </div>
           ))}
         </Accordion>
       )}
+
       {importEnabled && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
+
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button
@@ -229,9 +326,10 @@ export default function TaskList({ tasks, onImport }) {
           <p className="text-sm text-gray-600">Import Tasks</p>
         </HoverCardContent>
       </HoverCard>
+
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Drawer open={isDrawerOpen} onOpenChange={setDrawerOpen} direction="right">
+          <Drawer open={isCreateDrawerOpen} onOpenChange={setCreateDrawerOpen} direction="right">
             <DrawerTrigger asChild>
               <Button
                 variant="ghost"
@@ -246,7 +344,7 @@ export default function TaskList({ tasks, onImport }) {
                   Fill out the form below to create a new task and add it to the list.
                 </DrawerDescription>
               </DrawerHeader>
-              <TaskCreationForm onCreated={handleCreateTask} />
+              <TaskCreationForm onConfirm={handleCreateTask} />
             </DrawerContent>
           </Drawer>
         </HoverCardTrigger>
@@ -254,6 +352,7 @@ export default function TaskList({ tasks, onImport }) {
           <p className="text-sm text-gray-600">Create New Task</p>
         </HoverCardContent>
       </HoverCard>
+
       <Toaster />
     </div>
   );

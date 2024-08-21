@@ -35,7 +35,7 @@ class SignUpView(generics.GenericAPIView):
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class LoginView(APIView):
+class LoginView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     
     def post(self, request: Request):
@@ -60,6 +60,8 @@ class LoginView(APIView):
     def get(self, request: Request):
         content={
             "user":str(request.user),  
+            "email":str(request.user.email),
+            "canvas_token":str(request.user.canvas_token),
             "auth":str(request.auth),  
         }
         
@@ -72,3 +74,34 @@ class LogoutView(APIView):
     def post(self, request: Request):
         logout(request)
         return Response(data={'message': 'logout successful'}, status=status.HTTP_200_OK)
+    
+
+class UserView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request: Request):
+        user = request.user
+        content = {
+            'username': user.username,
+            'email': user.email,
+            'canvas_token': user.canvas_token,
+            'courses': user.courses.all()
+        }
+        
+        return Response(data=content, status=status.HTTP_200_OK)
+    
+    def put(self, request: Request):
+        user = request.user
+        if request.data.get('username'):
+            user.username = request.data.get('username')
+        if request.data.get('canvas_token'):
+            user.canvas_token = request.data.get('canvas_token')
+        user.save()
+        
+        return Response(data={'message': 'User updated successfully'}, status=status.HTTP_200_OK)
+    
+    def delete(self, request: Request):
+        user = request.user
+        user.delete()
+        
+        return Response(data={'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
