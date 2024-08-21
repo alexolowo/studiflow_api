@@ -37,6 +37,14 @@ import { Toaster } from './ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { FcCancel } from 'react-icons/fc';
 import { GiPartyPopper } from 'react-icons/gi';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
 
 export default function TaskList({ tasks, onImport, courseId }) {
   const [taskStatus, setTaskStatus] = useState({});
@@ -47,6 +55,7 @@ export default function TaskList({ tasks, onImport, courseId }) {
   const [importEnabled, setImportEnabled] = useState(false);
   const [isCreateDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [isEditDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState(null);
 
@@ -290,20 +299,20 @@ export default function TaskList({ tasks, onImport, courseId }) {
               </AccordionItem>
 
               <span className="mt-4" key={task.id + 12121}>
-                <Drawer open={isEditDrawerOpen} onOpenChange={setEditDrawerOpen} direction="right">
-                  <DrawerTrigger asChild>
+                <Dialog>
+                  <DialogTrigger asChild>
                     <Button variant="ghost">
                       <FaRegEdit size={28} />
                     </Button>
-                  </DrawerTrigger>
-                  <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none bg-none">
-                    <DrawerHeader>
-                      <DrawerTitle className="py-4">Edit Task</DrawerTitle>
-                      <DrawerDescription>Edit Task Details.</DrawerDescription>
-                    </DrawerHeader>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Edit Task</DialogTitle>
+                      <DialogDescription>Edit Task Details.</DialogDescription>
+                    </DialogHeader>
                     <TaskCreationForm task={task} onConfirm={handleEditTask} />
-                  </DrawerContent>
-                </Drawer>
+                  </DialogContent>
+                </Dialog>
               </span>
             </div>
           ))}
@@ -329,24 +338,24 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Drawer open={isCreateDrawerOpen} onOpenChange={setCreateDrawerOpen} direction="right">
-            <DrawerTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <Button
                 variant="ghost"
                 className="fixed bottom-12 right-12 border bg-white h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300 hover:scale-110">
                 <FaPlus size={40} className="color-gray-600" />
               </Button>
-            </DrawerTrigger>
-            <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none">
-              <DrawerHeader>
-                <DrawerTitle className="py-4">New Task</DrawerTitle>
-                <DrawerDescription>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+                <DialogDescription>
                   Fill out the form below to create a new task and add it to the list.
-                </DrawerDescription>
-              </DrawerHeader>
+                </DialogDescription>
+              </DialogHeader>
               <TaskCreationForm onConfirm={handleCreateTask} />
-            </DrawerContent>
-          </Drawer>
+            </DialogContent>
+          </Dialog>
         </HoverCardTrigger>
         <HoverCardContent className="mr-6 w-auto rounded-lg">
           <p className="text-sm text-gray-600">Create New Task</p>

@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from './ui/use-toast';
 import { FaRegCheckCircle } from 'react-icons/fa';
 import React from 'react';
+import { DateTimePicker } from './ui/datetime-picker';
 
 // Define the schema for the form using Zod
 const taskSchema = z.object({
@@ -84,29 +85,9 @@ export function TaskCreationForm({ task, onConfirm }) {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Due Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-[240px] pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}>
-                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <DateTimePicker value={field.value} onChange={field.onChange} />
+                </FormControl>
                 <FormDescription>When is this task due?</FormDescription>
                 <FormMessage />
               </FormItem>
