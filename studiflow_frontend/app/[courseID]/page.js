@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import CourseSideNav from '@/components/CourseSideNav';
+import CourseSideNav from '@/components/courseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
 
@@ -45,7 +45,7 @@ export default function CourseView() {
     async function getCourseTasks() {
         try {
             const accessToken = localStorage.getItem('accessToken');
-            
+
             const response = await fetch('http://localhost:8000/tasks/load_tasks/', {
                 method: 'GET',
                 headers: {
@@ -69,11 +69,11 @@ export default function CourseView() {
 
             const data = await response.json();
             console.log(data['data'][courseId]);
-            const parsedResults = data['data'][courseId].map((task)=>mapBackendFieldsToFrontendTask(task));
+            const parsedResults = data['data'][courseId].map((task) => mapBackendFieldsToFrontendTask(task));
             parsedResults && setTasks((prevState) => ([
                 ...prevState,
                 ...parsedResults,
-              ]));
+            ]));
         } catch (e) {
             setError(e.message);
             console.error("There was a problem fetching the tasks:");
@@ -82,22 +82,22 @@ export default function CourseView() {
     }
 
     useEffect(() => {
-        if(importing) 
-            getCourseTasks().catch((error)=> console.error('error importing tasks',error)).finally(()=>setImporting(false));
+        if (importing)
+            getCourseTasks().catch((error) => console.error('error importing tasks', error)).finally(() => setImporting(false));
     }, [importing]);
 
     useEffect(() => {
         async function getUsersCourseTasks() {
             try {
                 const accessToken = localStorage.getItem('accessToken');
-                
+
                 const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                     },
                 });
-    
+
                 if (response.status === 401) {
                     // Remove tokens and redirect to home page
                     localStorage.removeItem('accessToken');
@@ -105,15 +105,15 @@ export default function CourseView() {
                     router.push('/');
                     return;
                 }
-    
+
                 if (!response.ok) {
                     setError("Failed getting active tasks");
                     throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
                 }
-    
+
                 const data = await response.json();
                 console.log(data);
-                const parsedResults = data.map((task)=>mapBackendFieldsToFrontendTask(task));
+                const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
                 parsedResults && setTasks(parsedResults);
             } catch (e) {
                 setError(e.message);
@@ -123,15 +123,15 @@ export default function CourseView() {
         }
 
         getUsersCourseTasks();
-        
+
     }, []);
 
     const renderContent = () => {
         switch (activeTab) {
             case 'chat':
-                return <Chat courseId={courseId}/>
+                return <Chat courseId={courseId} />
             case 'tasks':
-                return <TaskList onImport={setImporting} tasks={[ ...tasks]} />;
+                return <TaskList onImport={setImporting} tasks={[...tasks]} />;
             case 'resources':
                 return <div>Resources Content</div>;
             default:
@@ -142,12 +142,14 @@ export default function CourseView() {
     return (
         <div className="flex h-screen">
             <CourseSideNav activeTab={activeTab} setActiveTab={setActiveTab} />
-            <main className="flex-1">
-            <div className='flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800'>
+            <main className="flex-1 flex flex-col">
+                <div className='flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800'>
                     {/* TODO: make a dropdown to switch courses from here */}
                     {courseCode}
                 </div>
-                {renderContent()}
+                <div className="flex-1 overflow-hidden">
+                    {renderContent()}
+                </div>
             </main>
         </div>
     );
