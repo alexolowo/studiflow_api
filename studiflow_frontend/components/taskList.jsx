@@ -37,6 +37,7 @@ import { Toaster } from './ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { FcCancel } from 'react-icons/fc';
 import { GiPartyPopper } from 'react-icons/gi';
+import { FaRegTrashAlt } from 'react-icons/fa';
 import {
   Dialog,
   DialogTrigger,
@@ -46,7 +47,7 @@ import {
   DialogDescription,
 } from './ui/dialog';
 
-export default function TaskList({ tasks, onImport, courseId }) {
+export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskStatus, setTaskStatus] = useState({});
   const [taskNotes, setTaskNotes] = useState({});
   const [originalTaskStatus, setOriginalTaskStatus] = useState({});
@@ -61,10 +62,12 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
   const handleCreateTask = (values) => {
     setIsCreateOpen(false);
+    onChange(true);
   };
 
   const handleEditTask = (values) => {
     setIsEditOpen(false);
+    onChange(true);
   };
 
   function mapBackendFieldsToFrontendTask(backendTask) {
@@ -213,14 +216,18 @@ export default function TaskList({ tasks, onImport, courseId }) {
                   </span>
                 </AccordionTrigger>
 
-                <AccordionContent>{`Due Date: ${new Date(task.dueDate).toLocaleString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                })}`}</AccordionContent>
+                <AccordionContent>{`Due Date: ${
+                  task.dueDate
+                    ? new Date(task.dueDate).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })
+                    : 'None'
+                }`}</AccordionContent>
 
                 <AccordionContent>
                   <DropdownMenu>
@@ -258,11 +265,15 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
                 <AccordionContent>
                   <div className="flex h-5 items-center space-x-4 text-sm text-gray-600">
-                    {task.weight && <Label>Task Weight: {task.weight}%</Label>}
-                    {task.weight && task.points && (
-                      <Separator orientation="vertical" className="bg-gray-900" />
+                    {typeof task.weight === 'number' && task.weight !== 0 && (
+                      <Label>Task Weight: {task.weight}%</Label>
                     )}
-                    {task.points && <Label>Max. Points: {task.points}</Label>}
+
+                    <Separator orientation="vertical" className="bg-gray-900" />
+
+                    {typeof task.points === 'number' && task.points !== 0 && (
+                      <Label>Max. Points: {task.points}</Label>
+                    )}
                   </div>
                 </AccordionContent>
 
@@ -307,6 +318,15 @@ export default function TaskList({ tasks, onImport, courseId }) {
                   }}>
                   <FaRegEdit size={28} />
                 </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsEditOpen(true);
+                    setTaskToBeEdited(task);
+                  }}>
+                  <FaRegTrashAlt size={28} />
+                </Button>
               </span>
             </div>
           ))}
@@ -319,7 +339,21 @@ export default function TaskList({ tasks, onImport, courseId }) {
             <DialogTitle>Edit Task</DialogTitle>
             <DialogDescription>Edit Task Details.</DialogDescription>
           </DialogHeader>
-          <TaskCreationForm isTypeEdit task={taskToBeEdited} onConfirm={handleEditTask} />
+          <TaskCreationForm
+            courseId={courseId}
+            isTypeEdit
+            task={taskToBeEdited}
+            onConfirm={handleEditTask}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>Delete This Task.</DialogDescription>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
 
@@ -357,7 +391,7 @@ export default function TaskList({ tasks, onImport, courseId }) {
                   Fill out the form below to create a new task and add it to the list.
                 </DialogDescription>
               </DialogHeader>
-              <TaskCreationForm onConfirm={handleCreateTask} />
+              <TaskCreationForm courseId={courseId} onConfirm={handleCreateTask} />
             </DialogContent>
           </Dialog>
         </HoverCardTrigger>

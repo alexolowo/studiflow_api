@@ -15,23 +15,25 @@ import {
   FormLabel,
   FormMessage,
 } from './ui/form';
-import { cn } from '@/lib/utils';
 import { useToast } from './ui/use-toast';
 import { FaRegCheckCircle } from 'react-icons/fa';
 import React from 'react';
 import { DateTimePicker } from './ui/datetime-picker';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select';
+import { useRouter } from 'next/navigation';
 
 // Define the schema for the form using Zod
 const taskSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   description: z.string().optional(),
-  dueDate: z.string().optional(),
+  dueDate: z.date().optional(),
   weight: z.number().min(0).max(100).optional(),
   points: z.number().min(0).optional(),
   notes: z.string().optional(),
+  status: z.enum(['TO-DO', 'IN PROGRESS', 'DONE']),
 });
 
-export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
+export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -39,22 +41,157 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
     defaultValues: {
       title: task?.title || '',
       description: task?.description || '',
-      dueDate: task?.dueDate || undefined,
+      dueDate: task?.dueDate || undefined, // Convert string to Date object
       weight: task?.weight || undefined,
       points: task?.points || undefined,
       notes: task?.notes || '',
+      status: task?.status || 'TO-DO',
     },
   });
 
+  const [isChanged, setIsChanged] = React.useState(false);
+  const router = useRouter();
+
+  const handleCreateTask = async (values) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_name: values.title,
+          task_description: values.description,
+          due_date: values.dueDate,
+          weight: values.weight || 0,
+          points_possible: values.points || 0,
+          notes: values.notes,
+          status: values.status,
+        }),
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        toast({
+          title: 'Failed getting active tasks',
+          description: `HTTP error getting tasks! status: ${response.status}`,
+          status: 'error',
+        });
+        return;
+      }
+
+      if (response.ok) {
+        onConfirm(values);
+
+        toast({
+          title: 'Task created',
+          description: 'Task has been created successfully',
+          status: 'success',
+        });
+        return;
+      }
+    } catch (e) {
+      console.error('There was a problem creating the tasks:');
+      console.error(e);
+
+      toast({
+        title: 'Failed getting active tasks',
+        description: 'There was a problem creating the tasks',
+        status: 'error',
+      });
+    }
+  };
+
+  const handleEditTask = async (values) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${task.id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task_name: values.title,
+          task_description: values.description,
+          due_date: values.dueDate,
+          weight: values.weight || 0,
+          points_possible: values.points || 0,
+          notes: values.notes,
+          status: values.status,
+        }),
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        toast({
+          title: 'Failed getting active tasks',
+          description: `HTTP error getting tasks! status: ${response.status}`,
+          status: 'error',
+        });
+        return;
+      }
+
+      if (response.ok) {
+        onConfirm(values);
+
+        toast({
+          title: 'Task updated',
+          description: 'Task has been updated successfully',
+          status: 'success',
+        });
+        return;
+      }
+    } catch (e) {
+      console.error('There was a problem updating the tasks:');
+      console.error(e);
+
+      toast({
+        title: 'Failed getting active tasks',
+        description: 'There was a problem updating the tasks',
+        status: 'error',
+      });
+    }
+  };
+
+  const watchedValues = form.watch();
+
+  React.useEffect(() => {
+    const hasChanges =
+      task &&
+      Object.keys(watchedValues).some(
+        (key) => watchedValues[key] !== task[key] || watchedValues[key] === ''
+      );
+
+    setIsChanged(hasChanges);
+  }, [watchedValues, task]);
+
   // Submit handler
   function onSubmit(values: z.infer<typeof taskSchema>) {
-    onConfirm(values);
     if (isTypeEdit) {
       toast({
         title: 'Task Updated!',
         description: 'The task has been updated successfully!',
         action: <FaRegCheckCircle className="w-6 h-6" />,
       });
+      handleEditTask(values);
+
       return;
     } else {
       toast({
@@ -62,6 +199,7 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
         description: 'The task has been created and added successfully!',
         action: <FaRegCheckCircle className="w-6 h-6" />,
       });
+      handleCreateTask(values);
     }
     // Handle task creation logic here
   }
@@ -101,12 +239,54 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
 
           <FormField
             control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Task Status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="TO-DO">TO-DO</SelectItem>
+                    <SelectItem value="IN PROGRESS">IN PROGRESS</SelectItem>
+                    <SelectItem value="DONE">DONE</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Task Description" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="weight"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Weight (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Task Weight" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="Task Weight"
+                    {...field}
+                    onChange={(event) => field.onChange(+event.target.value)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -120,7 +300,12 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
               <FormItem>
                 <FormLabel>Points</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Max Points" {...field} />
+                  <Input
+                    type="number"
+                    placeholder="Max Points"
+                    {...field}
+                    onChange={(event) => field.onChange(+event.target.value)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,7 +327,9 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm }) {
             )}
           />
 
-          <Button type="submit">Save Task</Button>
+          <Button type="submit" disabled={isTypeEdit && !isChanged}>
+            Save Task
+          </Button>
         </form>
       </Form>
     </div>

@@ -150,7 +150,7 @@ class ImportTasksView(generics.GenericAPIView):
     def save_tasks_to_db(self, tasks: list):
             for task in tasks:
                 new_task = Task.objects.create(
-                    id=task['id'],
+                    id= Task.objects.all().count() + 1,
                     task_name=task['task_name'],
                     task_type=task['task_type'],
                     task_description=ANTHROPIC_PROMPTS.summarize_text_prompt(text=task['task_description']),
@@ -198,9 +198,12 @@ class UserTasksView(generics.GenericAPIView):
         total_similarity = 0
         fields_compared = 0
 
+        print(task1)
+        print(task2)
+
         for field in fields_to_compare:
-            value1 = getattr(task1, field)
-            value2 = getattr(task2, field)
+            value1 = task1[field] or None
+            value2 = task2[field] or None
 
             if value1 is not None and value2 is not None:
                 if isinstance(value1, str) and isinstance(value2, str):
@@ -224,20 +227,34 @@ class UserTasksView(generics.GenericAPIView):
         serializer = TaskSerializer(tasks, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
+    def put(self, request: Request, course_id: int = None, task_id: int = None):
+        user = request.user
+        task = Task.objects.get(user=user, course_id=course_id, id=task_id)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     def post(self, request: Request, course_id: int = None):
         user = request.user
         tasks = Task.objects.filter(user=user, course_id=course_id)
+        
+        serializer = TaskSerializer(tasks, many=True)
 
-        for task in tasks:
+        for task in serializer.data:
             if self.task_similarity(task, request.data):
                 return Response(data={'error': 'Similar task already exists',
                                       'task': task}, status=status.HTTP_208_ALREADY_REPORTED)
             
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        new_task = TaskSerializer(data=request.data, partial=True)
+        new_task.initial_data['user'] = user.id
+        new_task.initial_data['course_id'] = course_id
+        if new_task.is_valid():
+            new_task.save()
+            return Response(data=new_task.data, status=status.HTTP_201_CREATED)
+        print(new_task.errors)
+        return Response(data=new_task.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class TaskFilterView(generics.ListAPIView):
@@ -266,3 +283,11 @@ class TaskFilterView(generics.ListAPIView):
         # If pagination is not required
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+class GeneralTasksInfoView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request):
+        tasks = Task.objects.all()
+        total_tasks = tasks.count()
+        return Response(data={'total_tasks': total_tasks}, status=status.HTTP_200_OK)

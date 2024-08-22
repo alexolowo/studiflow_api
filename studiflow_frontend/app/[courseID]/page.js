@@ -7,7 +7,6 @@ import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
 
 
-
 export default function CourseView() {
     const params = useParams();
     const router = useRouter();
@@ -15,6 +14,7 @@ export default function CourseView() {
     const courseCode = params.courseID.split('-')[1];
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState(null);
+    const [taskChange, setTaskChange] = useState(false);
     
     const [activeTab, setActiveTab] = useState('chat');
 
@@ -66,19 +66,21 @@ export default function CourseView() {
                 setError(e.message);
                 console.error("There was a problem fetching the tasks:");
                 console.error(e);
+            } finally {
+                setTaskChange(false);
             }
         }
 
         getUsersCourseTasks();
         
-    }, []);
+    }, [taskChange]);
 
     const renderContent = () => {
         switch (activeTab) {
             case 'chat':
                 return <Chat courseId={courseId}/>
             case 'tasks':
-                return <TaskList tasks={tasks} onImport={setTasks} courseId={courseId}/>;
+                return <TaskList tasks={tasks} onImport={setTasks} courseId={courseId} onChange={setTaskChange}/>;
             case 'resources':
                 return <div>Resources Content</div>;
             default:
