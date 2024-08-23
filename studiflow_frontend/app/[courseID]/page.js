@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import CourseSideNav from '@/components/CourseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
+import HeatMap from '@/components/heatMap';
 
 
 export default function CourseView() {
@@ -87,6 +88,8 @@ export default function CourseView() {
                 return <TaskList tasks={tasks} onImport={setTasks} courseId={courseId} onChange={setTaskChange}/>;
             case 'resources':
                 return <div>Resources Content</div>;
+            case 'analytics':
+                return <HeatMap taskData={tasks} />;
             default:
                 return null;
         }
