@@ -59,7 +59,7 @@ export default function CourseView() {
                 }
     
                 const data = await response.json();
-                console.log(data);
+                
                 const parsedResults = data.map((task)=>mapBackendFieldsToFrontendTask(task));
                 parsedResults && setTasks(parsedResults);
             } catch (e) {

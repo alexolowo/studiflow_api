@@ -43,7 +43,6 @@ export default function EditProfileForm({ initialData }) {
   };
 
   const onSubmit = async (values) => {
-    console.log('Form Submitted:', values);
     try {
       const response = await fetch('http://localhost:8000/auth/editUser/', {
         method: 'PUT',
@@ -57,7 +56,6 @@ export default function EditProfileForm({ initialData }) {
         }),
       });
       if (response.ok) {
-        console.log('User updated successfully');
         goBack();
         toast({
           title: 'Profile Updated',

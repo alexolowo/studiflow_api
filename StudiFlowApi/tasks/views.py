@@ -256,6 +256,12 @@ class UserTasksView(generics.GenericAPIView):
         print(new_task.errors)
         return Response(data=new_task.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def delete(self, request: Request, course_id: int = None, task_id: int = None):
+        user = request.user
+        task = Task.objects.filter(user=user, course_id=course_id, id=task_id)
+        task.delete()
+        return Response(data={'message': 'Task deleted successfully'}, status=status.HTTP_200_OK)
+    
 
 class TaskFilterView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]

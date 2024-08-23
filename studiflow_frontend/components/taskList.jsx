@@ -59,6 +59,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [taskToBeEdited, setTaskToBeEdited] = useState(null);
+  const [deleteTaskOpen, setDeleteTaskOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   const handleCreateTask = (values) => {
     setIsCreateOpen(false);
@@ -136,6 +138,47 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
         return 'bg-gray-200 text-black';
     }
   };
+
+  async function deleteTask() {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${taskToDelete.id}/`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed to delete task');
+        throw new Error(`HTTP error deleting task: status: ${response.status}`);
+      }
+
+      toast({
+        title: 'Task Deleted',
+        description: 'Task has been successfully deleted',
+      });
+      setDeleteTaskOpen(false);
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem deleting the task:');
+      console.error(e);
+
+      toast({
+        title: 'Task Could Not Be Deleted',
+        description: 'There was a problem deleting the task',
+        variant: 'destructive',
+      });
+    }
+  }
 
   async function getCourseTasks() {
     try {
@@ -322,8 +365,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setIsEditOpen(true);
-                    setTaskToBeEdited(task);
+                    setDeleteTaskOpen(true);
+                    setTaskToDelete(task);
                   }}>
                   <FaRegTrashAlt size={28} />
                 </Button>
@@ -348,12 +391,32 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog>
+      <Dialog open={deleteTaskOpen} onOpenChange={setDeleteTaskOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Delete Task</DialogTitle>
-            <DialogDescription>Delete This Task.</DialogDescription>
+            <DialogDescription>Selected Task: {taskToDelete?.title}.</DialogDescription>
           </DialogHeader>
+          <Label>Are you sure you want to delete this task?</Label>
+          <div className="flex justify-between">
+            <Button
+              onClick={() => {
+                setDeleteTaskOpen(false);
+                setTaskToDelete(null);
+              }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                await deleteTask();
+                setDeleteTaskOpen(false);
+                setTaskToDelete(null);
+                onChange(true);
+              }}
+              variant="destructive">
+              Confirm
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -115,7 +115,7 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm }) {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${task.id}`, {
+      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${task.id}/`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${accessToken}`,
