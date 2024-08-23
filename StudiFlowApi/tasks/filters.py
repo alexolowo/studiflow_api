@@ -3,7 +3,7 @@ from .models import Task
 
 class TaskFilter(filters.FilterSet):
     status = filters.CharFilter(lookup_expr='iexact')
-    due_date = filters.DateFilter()
+    due_date = filters.DateTimeFromToRangeFilter()
     weight = filters.NumberFilter()
     points_possible = filters.NumberFilter()
 

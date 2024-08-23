@@ -263,7 +263,7 @@ class UserTasksView(generics.GenericAPIView):
         return Response(data={'message': 'Task deleted successfully'}, status=status.HTTP_200_OK)
     
 
-class TaskFilterView(generics.ListAPIView):
+class TaskFilterView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     serializer_class = TaskSerializer
@@ -278,8 +278,6 @@ class TaskFilterView(generics.ListAPIView):
         
         # Get the queryset
         queryset = self.filter_queryset(self.get_queryset(request.user, course_id))
-        print(course_id)
-        print(queryset)
         # Paginate the results
         page = self.paginate_queryset(queryset)
         if page is not None:

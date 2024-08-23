@@ -26,14 +26,14 @@ import { useRouter } from 'next/navigation';
 const taskSchema = z.object({
   title: z.string().min(2, { message: 'Title must be at least 2 characters.' }),
   description: z.string().optional(),
-  dueDate: z.date().optional(),
+  dueDate: z.union([z.date(), z.string()]).optional(),
   weight: z.number().min(0).max(100).optional(),
   points: z.number().min(0).optional(),
   notes: z.string().optional(),
   status: z.enum(['TO-DO', 'IN PROGRESS', 'DONE']),
 });
 
-export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm }) {
+export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickEdit }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -327,7 +327,7 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm }) {
             )}
           />
 
-          <Button type="submit" disabled={isTypeEdit && !isChanged}>
+          <Button type="submit" disabled={!isTypeEdit && (!isChanged || quickEdit)}>
             Save Task
           </Button>
         </form>

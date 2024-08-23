@@ -46,6 +46,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from './ui/dialog';
+import TaskFilterBar from './filterBar';
 
 export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskStatus, setTaskStatus] = useState({});
@@ -61,6 +62,7 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskToBeEdited, setTaskToBeEdited] = useState(null);
   const [deleteTaskOpen, setDeleteTaskOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isQuickEdit, setIsQuickEdit] = useState(false);
 
   const handleCreateTask = (values) => {
     setIsCreateOpen(false);
@@ -69,6 +71,7 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
 
   const handleEditTask = (values) => {
     setIsEditOpen(false);
+    setIsQuickEdit(false);
     onChange(true);
   };
 
@@ -122,6 +125,81 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
     } else {
       setSaveEnabled(false);
     }
+  };
+
+  useEffect(() => {
+    checkForChanges();
+  }, [originalTaskNotes, originalTaskStatus]);
+
+  const handleQuickSaveChanges = (task) => {
+    setIsEditOpen(true);
+    const quickEditedTask = {
+      ...task,
+      status: taskStatus[task.id],
+      notes: taskNotes[task.id],
+    };
+    setIsQuickEdit(true);
+    setTaskToBeEdited(quickEditedTask);
+
+    setOriginalTaskNotes(taskNotes);
+    setOriginalTaskStatus(taskStatus);
+  };
+
+  const handleApplyFilter = async (filters) => {
+    console.log('filters', filters);
+    try {
+      const queryParams = Object.entries(filters)
+        .filter(([key, value]) => value !== undefined && value !== '')
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+      console.log('queryParams', queryParams);
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(
+        `http://localhost:8000/tasks/${courseId}/filters/?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed to apply filters');
+        throw new Error(`HTTP error applying filters: status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
+      console.log('parsedResults', parsedResults);
+      console.log('parsedResults', response.url);
+      parsedResults && onImport(parsedResults);
+      toast({
+        title: 'Tasks Filtered',
+        description: 'Tasks have been successfully filtered',
+      });
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem applying filters:');
+      console.error(e);
+    }
+  };
+
+  const handleClearFilter = () => {
+    onImport([]);
+    onChange(true);
+    toast({
+      title: 'Filters Cleared',
+      description: 'Filters have been successfully cleared',
+    });
   };
 
   const handleImportButtonClick = () => {
@@ -245,6 +323,9 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
       <div className="flex items-center pb-8 px-8 text-4xl font-semibold text-gray-800">
         <span>Tasks</span>
       </div>
+      <div className="flex justify-between items-center py-4 mb-4 px-8 bg-white shadow-md rounded-md">
+        <TaskFilterBar onClear={handleClearFilter} onFilter={handleApplyFilter} />
+      </div>
       {tasks && (
         <Accordion type="multiple" collapsible="true" className="w-full">
           {tasks.map((task) => (
@@ -346,7 +427,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
                   </div>
                   <Button
                     disabled={!saveEnabled}
-                    className={`bg-green-500 ${!saveEnabled && 'opacity-50 cursor-not-allowed'}`}>
+                    className={`bg-green-500 ${!saveEnabled && 'opacity-50 cursor-not-allowed'}`}
+                    onClick={() => handleQuickSaveChanges(task)}>
                     Save Changes
                   </Button>
                 </AccordionContent>
@@ -387,6 +469,7 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
             isTypeEdit
             task={taskToBeEdited}
             onConfirm={handleEditTask}
+            quickEdit={isQuickEdit}
           />
         </DialogContent>
       </Dialog>

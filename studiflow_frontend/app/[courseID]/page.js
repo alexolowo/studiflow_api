@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import CourseSideNav from '@/components/CourseSideNav';
 import Chat from '@/components/chat';
@@ -74,6 +74,10 @@ export default function CourseView() {
         getUsersCourseTasks();
         
     }, [taskChange]);
+
+    useEffect(() => {
+        console.log(tasks);
+    }, [setTasks]);
 
     const renderContent = () => {
         switch (activeTab) {
