@@ -1,7 +1,12 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { CalendarHeatmap } from './ui/calendar-heatmap';
+import { mapBackendFieldsToFrontendTask } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Separator } from './ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 
 const difficultyColors = {
   low: 'bg-green-200',
@@ -9,17 +14,73 @@ const difficultyColors = {
   high: 'bg-red-500',
 };
 
-const HeatMap = ({ taskData }) => {
+const HeatMap = () => {
+  const [taskData, setTaskData] = React.useState([]);
+  const [error, setError] = React.useState('');
+  const [date, setDate] = React.useState(undefined);
+  const [dayCardVisible, setDayCardVisible] = React.useState(false);
+  const router = useRouter();
+
+  React.useEffect(() => {
+    async function getUserTasks() {
+      console.log('fetching tasks');
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+
+        const response = await fetch(`http://localhost:8000/tasks/general/`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.status === 401) {
+          // Remove tokens and redirect to home page
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          router.push('/');
+          return;
+        }
+
+        if (!response.ok) {
+          setError('Failed getting active tasks');
+          throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const parsedResults = data['tasks'].map((task) => mapBackendFieldsToFrontendTask(task));
+        parsedResults && setTaskData(parsedResults);
+      } catch (e) {
+        setError(e.message);
+        console.error('There was a problem fetching the tasks:');
+        console.error(e);
+      }
+    }
+
+    getUserTasks();
+  }, []);
+
   function calculateTaskWeightsByDate(tasks) {
     const dateWeightsMap = {};
 
     tasks.forEach((task) => {
-      const dueDate = new Date(task.dueDate).toISOString().split('T')[0];
+      if (!task.dueDate) {
+        return;
+      }
+      // Parse the date and set it to the start of the day in UTC
+      const dueDate = new Date(task.dueDate);
+      dueDate.setUTCDate(dueDate.getUTCDate() + 1);
 
-      if (dateWeightsMap[dueDate]) {
-        dateWeightsMap[dueDate] += 1;
+      const utcDate = new Date(
+        Date.UTC(dueDate.getUTCFullYear(), dueDate.getUTCMonth(), dueDate.getUTCDate())
+      );
+      const dateKey = utcDate.toISOString().split('T')[0];
+
+      if (dateWeightsMap[dateKey]) {
+        dateWeightsMap[dateKey] += 1;
       } else {
-        dateWeightsMap[dueDate] = 1;
+        dateWeightsMap[dateKey] = 1;
       }
     });
 
@@ -29,20 +90,93 @@ const HeatMap = ({ taskData }) => {
     }));
   }
 
-  const weightedDates = calculateTaskWeightsByDate(taskData);
+  const getTasksOnDate = (date) => {
+    console.log('date', date);
+    const clickedDate = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    );
+    const clickedDateString = clickedDate.toISOString().split('T')[0];
 
-  console.log(weightedDates);
+    return taskData.filter((task) => {
+      if (!task.dueDate) return false;
+      const taskDate = new Date(task.dueDate);
+      const taskDateString = new Date(
+        Date.UTC(taskDate.getUTCFullYear(), taskDate.getUTCMonth(), taskDate.getUTCDate())
+      )
+        .toISOString()
+        .split('T')[0];
+
+      return taskDateString === clickedDateString;
+    });
+  };
+
+  const weightedDates = calculateTaskWeightsByDate(taskData);
+  weightedDates.push({ date: new Date(2022, 1, 1), weight: 0 });
 
   return (
-    <div className="max-w-screen-md h-full pb-0 p-10">
-      <CalendarHeatmap
-        variantClassnames={[
-          'text-white hover:text-white bg-green-400 hover:bg-green-400',
-          'text-white hover:text-white bg-green-500 hover:bg-green-500',
-          'text-white hover:text-white bg-green-700 hover:bg-green-700',
-        ]}
-        weightedDates={weightedDates}
-      />
+    <div className="flex flex-col">
+      <span className="text-xl font-bold p-2 pl-8">Task Heatmap</span>
+      <div className="max-w-screen-md h-full shadow-lg rounded-lg">
+        <CalendarHeatmap
+          variantClassnames={[
+            'text-white hover:text-white bg-green-400 hover:bg-green-400',
+            'text-white hover:text-white bg-green-500 hover:bg-green-500',
+            'text-white hover:text-white bg-green-700 hover:bg-green-700',
+          ]}
+          weightedDates={weightedDates}
+          showWeekNumber
+          onDayClick={(date) => {
+            setDayCardVisible(true);
+            setDate(date);
+          }}
+        />
+        <Dialog open={dayCardVisible} onOpenChange={setDayCardVisible}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Tasks due on {date && date.toDateString()}</DialogTitle>
+              <DialogDescription>These are the tasks that are due on this date</DialogDescription>
+            </DialogHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Due Time</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {date &&
+                  getTasksOnDate(date).map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell>
+                        <Label>{task.title}</Label>
+                      </TableCell>
+                      {/* <TableCell>
+                <Separator orientation="vertical" className="bg-gray-900" />
+              </TableCell> */}
+                      <TableCell>
+                        <Label>{new Date(task.dueDate).toLocaleTimeString()}</Label>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="flex justify-between my-4">
+        <div className=" flex gap-2 items-center">
+          <Button className="color-box bg-green-400"></Button>
+          <span className="">Low</span>
+        </div>
+        <div className=" flex gap-2 items-center">
+          <Button className="color-box bg-green-500"></Button>
+          <span className="">Mid</span>
+        </div>
+        <div className=" flex gap-2 items-center">
+          <Button className="color-box bg-green-700"></Button>
+          <span className="">High</span>
+        </div>
+      </div>
     </div>
   );
 };

@@ -150,7 +150,6 @@ class ImportTasksView(generics.GenericAPIView):
     def save_tasks_to_db(self, tasks: list):
             for task in tasks:
                 new_task = Task.objects.create(
-                    id= Task.objects.all().count() + 1,
                     task_name=task['task_name'],
                     task_type=task['task_type'],
                     task_description=ANTHROPIC_PROMPTS.summarize_text_prompt(text=task['task_description']),
@@ -165,6 +164,15 @@ class ImportTasksView(generics.GenericAPIView):
                     notes=task['notes'],
                     grade=task['grade'],
                 )
+                duplicate = Task.objects.filter(task_name=new_task.task_name, 
+                                    user=new_task.user,
+                                    course_id=new_task.course_id, 
+                                    due_date=new_task.due_date, 
+                                    html_url=new_task.html_url,
+                                    submission_link=new_task.submission_link
+                                    )
+                if duplicate.exists():
+                    continue
                 new_task.save()
 
     def get(self, request:Request, course_id:int):
@@ -197,9 +205,6 @@ class UserTasksView(generics.GenericAPIView):
         fields_to_compare = ['task_name', 'task_description', 'weight', 'points_possible']
         total_similarity = 0
         fields_compared = 0
-
-        print(task1)
-        print(task2)
 
         for field in fields_to_compare:
             value1 = task1[field] or None
@@ -288,10 +293,12 @@ class TaskFilterView(generics.GenericAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
-class GeneralTasksInfoView(generics.GenericAPIView):
+class GeneralTasksInfoView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request):
-        tasks = Task.objects.all()
-        total_tasks = tasks.count()
-        return Response(data={'total_tasks': total_tasks}, status=status.HTTP_200_OK)
+        tasks = Task.objects.filter(user=request.user)
+        tasks = TaskSerializer(tasks, many=True)
+        total_tasks = len(tasks.data)
+        return Response(data={'total_tasks': total_tasks, 
+                              'tasks': tasks.data}, status=status.HTTP_200_OK)

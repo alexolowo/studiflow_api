@@ -17,8 +17,8 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
   const handleFilter = () => {
     onFilter({
       status,
-      due_date_after,
-      due_date_before,
+      due_date_after: due_date_after ? due_date_after.toISOString() : undefined,
+      due_date_before: due_date_before ? due_date_before.toISOString() : undefined,
       weight,
       points_possible,
       order_by,

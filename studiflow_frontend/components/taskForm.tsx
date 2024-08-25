@@ -170,6 +170,8 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
     }
   };
 
+  const buttonDisabled = false;
+
   const watchedValues = form.watch();
 
   React.useEffect(() => {
@@ -327,7 +329,7 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
             )}
           />
 
-          <Button type="submit" disabled={!isTypeEdit && (!isChanged || quickEdit)}>
+          <Button type="submit" disabled={buttonDisabled}>
             Save Task
           </Button>
         </form>

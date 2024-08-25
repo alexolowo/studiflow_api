@@ -6,6 +6,7 @@ import CourseSideNav from '@/components/CourseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
 import HeatMap from '@/components/heatMap';
+import { mapBackendFieldsToFrontendTask } from '@/lib/utils';
 
 
 export default function CourseView() {
@@ -15,24 +16,8 @@ export default function CourseView() {
     const courseCode = params.courseID.split('-')[1];
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState(null);
-    const [taskChange, setTaskChange] = useState(false);
-    
+    const [taskChange, setTaskChange] = useState(false);    
     const [activeTab, setActiveTab] = useState('chat');
-
-    function mapBackendFieldsToFrontendTask(backendTask) {
-        return {
-            id: backendTask.id,
-            title: backendTask.task_name,
-            description: backendTask.task_description,
-            dueDate: backendTask.due_date,
-            status: backendTask.status,
-            link: backendTask.submission_link || backendTask.html_url,
-            weight: backendTask.weight,
-            points: backendTask.points_possible,
-            notes: backendTask.notes,
-            grade: backendTask.grade
-        };
-    }
 
     useEffect(() => {
         async function getUsersCourseTasks() {
@@ -76,9 +61,6 @@ export default function CourseView() {
         
     }, [taskChange]);
 
-    useEffect(() => {
-        console.log(tasks);
-    }, [setTasks]);
 
     const renderContent = () => {
         switch (activeTab) {
@@ -89,7 +71,7 @@ export default function CourseView() {
             case 'resources':
                 return <div>Resources Content</div>;
             case 'analytics':
-                return <HeatMap taskData={tasks} />;
+                return <HeatMap />;
             default:
                 return null;
         }
