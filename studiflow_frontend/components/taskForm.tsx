@@ -33,7 +33,7 @@ const taskSchema = z.object({
   status: z.enum(['TO-DO', 'IN PROGRESS', 'DONE']),
 });
 
-export function TaskCreationForm({ isTypeEdit, task, onConfirm, quickEdit }) {
+export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickEdit }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -41,7 +41,7 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm, quickEdit }) {
     defaultValues: {
       title: task?.title || '',
       description: task?.description || '',
-      dueDate: task?.dueDate || undefined, // Convert string to Date object
+      dueDate: task?.dueDate ? new Date(task?.dueDate) : undefined, // Convert string to Date object
       weight: task?.weight || undefined,
       points: task?.points || undefined,
       notes: task?.notes || '',
@@ -56,7 +56,7 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm, quickEdit }) {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/`, {
+      const response = await fetch(`http://localhost:8000/tasks/${courseId || task.courseId}/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -115,22 +115,25 @@ export function TaskCreationForm({ isTypeEdit, task, onConfirm, quickEdit }) {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/${task.id}/`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          task_name: values.title,
-          task_description: values.description,
-          due_date: values.dueDate,
-          weight: values.weight || 0,
-          points_possible: values.points || 0,
-          notes: values.notes,
-          status: values.status,
-        }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/tasks/${courseId || task.courseId}/${task.id}/`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            task_name: values.title,
+            task_description: values.description,
+            due_date: values.dueDate,
+            weight: values.weight || 0,
+            points_possible: values.points || 0,
+            notes: values.notes,
+            status: values.status,
+          }),
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');

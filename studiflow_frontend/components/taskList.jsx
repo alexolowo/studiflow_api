@@ -421,9 +421,11 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
                     <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:from-purple-600 hover:via-pink-600 hover:to-indigo-600">
                       Ask StudiFlow AI about this task?
                     </Button>
-                    <Button variant="link">
-                      <span className="text-gray-600 text-lg">Task Link</span>
-                    </Button>
+                    {task.link && (
+                      <Button variant="link">
+                        <span className="text-gray-600 text-lg">Task Link</span>
+                      </Button>
+                    )}
                   </div>
                   <Button
                     disabled={!saveEnabled}

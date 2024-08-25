@@ -62,7 +62,8 @@ function categorizeDatesPerVariant(weightedDates: WeightedDateEntry[], noOfVaria
   const categorizedRecord = [...Array(noOfVariants)].map(() => [] as Date[]);
 
   const minNumber = sortedEntries[0].weight;
-  const maxNumber = sortedEntries[sortedEntries.length - 1].weight;
+  // const maxNumber = sortedEntries[sortedEntries.length - 1].weight;
+  const maxNumber = Math.max(sortedEntries[sortedEntries.length - 1].weight, 5);
   const range = minNumber == maxNumber ? 1 : (maxNumber - minNumber) / noOfVariants;
 
   sortedEntries.forEach((entry) => {

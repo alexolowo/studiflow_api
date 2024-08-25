@@ -49,7 +49,6 @@ class ImportTasksView(generics.GenericAPIView):
             assignments = response.data
             for assignment in assignments:
                 task = Task()
-                task.id = assignment['id']
                 task.task_description = assignment['description']
                 task.task_name = assignment['name']
                 task.task_type = 'assignment'
@@ -70,7 +69,6 @@ class ImportTasksView(generics.GenericAPIView):
             assignments = response.data
             for assignment in assignments:
                 task = Task()
-                task.id = assignment['id']
                 task.task_description = assignment['description']
                 task.task_name = assignment['title']
                 task.task_type = 'quiz'
@@ -106,7 +104,6 @@ class ImportTasksView(generics.GenericAPIView):
                                 task.task_name = item['title']
                                 task.html_url=item['url']
                                 task.task_type = 'module'
-                                task.id = item['id']
                                 task.course_id = course_id
                                 task.user = self.USER
                                 tasks.append(task)

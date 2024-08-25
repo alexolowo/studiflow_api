@@ -163,17 +163,18 @@ const HeatMap = () => {
         </Dialog>
       </div>
       <div className="flex justify-between my-4">
+        <div>Legend: </div>
         <div className=" flex gap-2 items-center">
           <Button className="color-box bg-green-400"></Button>
-          <span className="">Low</span>
+          <span className="">1</span>
         </div>
         <div className=" flex gap-2 items-center">
           <Button className="color-box bg-green-500"></Button>
-          <span className="">Mid</span>
+          <span className="">2-3</span>
         </div>
         <div className=" flex gap-2 items-center">
           <Button className="color-box bg-green-700"></Button>
-          <span className="">High</span>
+          <span className="">4+</span>
         </div>
       </div>
     </div>
