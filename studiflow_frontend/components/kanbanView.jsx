@@ -1,48 +1,85 @@
 import React, { useState } from 'react';
 import Column from './column';
 import { mapBackendFieldsToFrontendTask } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 export default function KanbanView() {
   const [taskData, setTaskData] = React.useState([]);
+  const [error, setError] = React.useState(null);
+  const router = useRouter();
+
+  async function getUserTasks() {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:8000/tasks/general/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.status === 401) {
+        // Remove tokens and redirect to home page
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed getting active tasks');
+        throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const parsedResults = data['tasks'].map((task) => mapBackendFieldsToFrontendTask(task));
+      parsedResults && setTaskData(parsedResults);
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem fetching the tasks:');
+      console.error(e);
+    }
+  }
+
+  const updateTaskStatusOnDrop = async (task, status) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/${task.id}/`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: status }),
+      });
+
+      if (response.status === 401) {
+        // Remove tokens and redirect to home page
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed updating task status');
+        throw new Error(`HTTP error updating task status: ${response.status}`);
+      }
+
+      await getUserTasks();
+    } catch (e) {
+      console.error('There was a problem updating the task status:');
+      console.error(e);
+    }
+  };
 
   React.useEffect(() => {
-    async function getUserTasks() {
-      try {
-        const accessToken = localStorage.getItem('accessToken');
-
-        const response = await fetch(`http://localhost:8000/tasks/general/`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (response.status === 401) {
-          // Remove tokens and redirect to home page
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          router.push('/');
-          return;
-        }
-
-        if (!response.ok) {
-          setError('Failed getting active tasks');
-          throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        const parsedResults = data['tasks'].map((task) => mapBackendFieldsToFrontendTask(task));
-        parsedResults && setTaskData(parsedResults);
-      } catch (e) {
-        setError(e.message);
-        console.error('There was a problem fetching the tasks:');
-        console.error(e);
-      }
-    }
-
     getUserTasks();
   }, []);
+
   const [tasks, setTasks] = useState([
     {
       id: 1,
@@ -75,11 +112,17 @@ export default function KanbanView() {
     e.preventDefault();
   };
 
-  const onDrop = (e, status) => {
+  const onDrop = async (e, status) => {
     const taskId = e.dataTransfer.getData('taskId');
-    setTaskData(
-      taskData.map((task) => (task.id.toString() === taskId ? { ...task, status } : task))
-    );
+    const task = taskData.find((task) => task.id.toString() === taskId);
+    if (task.status === status) {
+      return;
+    }
+    await updateTaskStatusOnDrop(task, status);
+    await getUserTasks();
+    // setTaskData(
+    //   taskData.map((task) => (task.id.toString() === taskId ? { ...task, status } : task))
+    // );
   };
 
   return (
