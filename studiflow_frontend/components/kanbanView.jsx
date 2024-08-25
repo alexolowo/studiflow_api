@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import Column from './column';
 import { mapBackendFieldsToFrontendTask } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import TaskFilterBar from './filterBar';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function KanbanView() {
   const [taskData, setTaskData] = React.useState([]);
   const [error, setError] = React.useState(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   async function getUserTasks() {
     try {
@@ -125,8 +128,54 @@ export default function KanbanView() {
     // );
   };
 
+  const handleApplyFilter = async (filters) => {
+    console.log('filters', filters);
+    try {
+      const queryParams = Object.entries(filters)
+        .filter(([key, value]) => value !== undefined && value !== '')
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+      console.log('queryParams', queryParams);
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:8000/tasks/filters/?${queryParams}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error applying filters: status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
+      console.log('parsedResults', parsedResults);
+      console.log('parsedResults', response.url);
+      parsedResults && setTaskData(parsedResults);
+      toast({
+        title: 'Tasks Filtered',
+        description: 'Tasks have been successfully filtered',
+      });
+    } catch (e) {
+      console.error('There was a problem applying filters:');
+      console.error(e);
+    }
+  };
+
   return (
     <div className="p-6 min-h-screen">
+      <div className="mb-4 mx-12">
+        <TaskFilterBar onFilter={handleApplyFilter} onClear={getUserTasks} />
+      </div>
       <div className="flex space-x-4">
         {columns.map((column) => (
           <Column

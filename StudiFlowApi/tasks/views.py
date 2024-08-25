@@ -293,6 +293,31 @@ class TaskFilterView(generics.GenericAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
+
+class UserFilterView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TaskFilter
+    ordering_fields = ['status', 'due_date', 'weight', 'points_possible']
+    
+    def get(self, request: Request):
+        
+        # Get the queryset
+        queryset = self.filter_queryset(Task.objects.filter(user=request.user))
+        # Paginate the results
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        # If pagination is not required
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    
+    
 class GeneralTasksInfoView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
