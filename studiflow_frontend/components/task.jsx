@@ -47,12 +47,7 @@ export default function Task({ task, onDragStart, courses, onTaskChange }) {
               style={{ backgroundColor: courseColor, color: '#fff' }}>
               {course}
             </span>
-            <TaskDrawer
-              taskId={task.id}
-              taskTitle={task.title}
-              task={task}
-              onChange={onTaskChange}
-            />
+            <TaskDrawer task={task} onChange={onTaskChange} />
           </div>
           <span className="text-xs font-medium text-gray-500">{taskDate}</span>
         </div>
