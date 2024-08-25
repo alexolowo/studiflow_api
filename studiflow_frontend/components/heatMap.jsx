@@ -23,7 +23,6 @@ const HeatMap = () => {
 
   React.useEffect(() => {
     async function getUserTasks() {
-      console.log('fetching tasks');
       try {
         const accessToken = localStorage.getItem('accessToken');
 
