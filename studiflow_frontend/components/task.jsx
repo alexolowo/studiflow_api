@@ -29,13 +29,17 @@ export default function Task({ task, onDragStart, courses, onTaskChange }) {
   //   const courseColorClass = courseColors[course] || 'bg-gray-500 text-white';
   const courseColor = stringToColor(course);
 
+  const taskDate = task.dueDate
+    ? `${new Date(task.dueDate).toDateString()} at ${new Date(task.dueDate).toLocaleTimeString()}`
+    : 'No due date';
+
   return (
     <Card
       className="bg-white shadow-sm hover:shadow-md transition-all duration-300 cursor-move"
       draggable
       onDragStart={(e) => onDragStart(e, task.id)}>
       <CardHeader className="p-4">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <div className="flex items-center space-x-3">
             {/* <span className={`text-xs font-semibold px-2 py-1 rounded ${courseColorClass}`}> */}
             <span
@@ -50,7 +54,7 @@ export default function Task({ task, onDragStart, courses, onTaskChange }) {
               onChange={onTaskChange}
             />
           </div>
-          <span className="text-xs font-medium text-gray-500">{task.dueDate}</span>
+          <span className="text-xs font-medium text-gray-500">{taskDate}</span>
         </div>
         <CardDescription className="text-sm text-gray-600 mt-2 line-clamp-2">
           {task.description}
