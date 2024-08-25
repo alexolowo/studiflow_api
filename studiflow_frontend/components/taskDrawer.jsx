@@ -19,8 +19,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from './ui/button';
 import { useEffect } from 'react';
+import { TaskCreationForm } from './taskForm';
 
-export default function TaskDrawer({ taskId, taskTitle }) {
+export default function TaskDrawer({ task, taskId, taskTitle, onChange }) {
   // Use taskId to get more information for the current task.
   useEffect(() => {}, []);
 
@@ -38,7 +39,7 @@ export default function TaskDrawer({ taskId, taskTitle }) {
             More inforamtion and resources for the selected Task
           </DrawerDescription>
         </DrawerHeader>
-        <div>This is the body and stuff</div>
+        <TaskCreationForm isTypeEdit task={task} onConfirm={onChange} />
         <DrawerFooter>
           <Button>Submit</Button>
           <DrawerClose>

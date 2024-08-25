@@ -138,6 +138,7 @@ export default function KanbanView() {
             onDragOver={onDragOver}
             onDrop={onDrop}
             status={column.status}
+            onTaskChange={() => getUserTasks()}
           />
         ))}
       </div>

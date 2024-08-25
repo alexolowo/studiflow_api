@@ -33,7 +33,7 @@ const taskSchema = z.object({
   status: z.enum(['TO-DO', 'IN PROGRESS', 'DONE']),
 });
 
-export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickEdit }) {
+export function TaskCreationForm({ isTypeEdit, task, onConfirm, quickEdit }) {
   // Initialize the form with default values
   const { toast } = useToast();
   const form = useForm<z.infer<typeof taskSchema>>({
@@ -56,7 +56,7 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
+      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -115,7 +115,7 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${task.id}/`, {
+      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/${task.id}/`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${accessToken}`,

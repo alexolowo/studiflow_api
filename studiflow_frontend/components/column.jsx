@@ -21,9 +21,11 @@ export default function Column({
   onDragOver,
   onDrop,
   status,
+  onTaskChange,
 }) {
   const router = useRouter();
   const [data, setData] = useState([]);
+  const [taskChange, setTaskChange] = useState(false);
   useEffect(() => {
     async function getCourses() {
       try {
@@ -60,6 +62,15 @@ export default function Column({
     getCourses();
   }, []);
 
+  useEffect(() => {
+    if (taskChange) {
+      onTaskChange();
+    }
+    setTaskChange(false);
+  }, [taskChange]);
+
+  console.log('task changed ', taskChange);
+
   return (
     <Card className="flex-1 " onDragOver={onDragOver} onDrop={(e) => onDrop(e, status)}>
       <CardHeader>
@@ -72,7 +83,13 @@ export default function Column({
       </CardHeader>
       <CardContent className="space-y-2">
         {tasks.map((task) => (
-          <Task key={task.id} task={task} onDragStart={onDragStart} courses={data} />
+          <Task
+            key={task.id}
+            task={task}
+            onDragStart={onDragStart}
+            courses={data}
+            onTaskChange={(value) => setTaskChange(true)}
+          />
         ))}
       </CardContent>
     </Card>

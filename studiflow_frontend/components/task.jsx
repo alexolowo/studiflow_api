@@ -14,7 +14,7 @@ import TaskDrawer from './taskDrawer';
 //   MAT135: 'bg-purple-500',
 // };
 
-export default function Task({ task, onDragStart, courses }) {
+export default function Task({ task, onDragStart, courses, onTaskChange }) {
   function stringToColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -43,7 +43,12 @@ export default function Task({ task, onDragStart, courses }) {
               style={{ backgroundColor: courseColor, color: '#fff' }}>
               {course}
             </span>
-            <TaskDrawer taskId={task.id} taskTitle={task.title} />
+            <TaskDrawer
+              taskId={task.id}
+              taskTitle={task.title}
+              task={task}
+              onChange={onTaskChange}
+            />
           </div>
           <span className="text-xs font-medium text-gray-500">{task.dueDate}</span>
         </div>
