@@ -9,7 +9,7 @@ import {
 import { Button } from './ui/button';
 import { ChevronDown } from 'lucide-react';
 
-export function CourseHeader({ courses, currentCourseName: currentCourse }) {
+export function CourseHeader({ courses, currentCourse }) {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const router = useRouter();
 
@@ -20,15 +20,13 @@ export function CourseHeader({ courses, currentCourseName: currentCourse }) {
     router.push(path);
   };
 
+  console.log(currentCourse);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center space-x-2">
-          {selectedCourse && currentCourse && (
-            <span className="text-2xl">
-              {selectedCourse ? selectedCourse.courseName : currentCourse.courseName}
-            </span>
-          )}
+          {currentCourse[0] && <span className="text-2xl">{currentCourse[0]?.courseName}</span>}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
