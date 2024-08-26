@@ -2,10 +2,12 @@
 
 import { FaComment, FaTasks, FaBook, FaChartBar } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
+import PageBanner from '@/components/pageBanner';
 
 export default function CourseSideNav({ activeTab, setActiveTab }) {
   return (
     <nav className="flex flex-col space-y-2 p-4 bg-gray-100 h-full">
+      <PageBanner />
       <Button
         variant={activeTab === 'chat' ? 'default' : 'ghost'}
         onClick={() => setActiveTab('chat')}>
