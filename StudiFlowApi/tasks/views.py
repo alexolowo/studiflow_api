@@ -7,11 +7,12 @@ from rest_framework import status, generics
 from rest_framework.response import Response
 from prompts.task_prompts import AnthropicAPI
 import requests
-from courses.models import Course
 import json
 from typing import List
-from django.db.models import QuerySet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TaskFilter
 
 IMPORT_PAGES: List[str] = ['assignments', 'quizzes' , 'modules']
 ANTHROPIC_PROMPTS = AnthropicAPI()
@@ -48,7 +49,6 @@ class ImportTasksView(generics.GenericAPIView):
             assignments = response.data
             for assignment in assignments:
                 task = Task()
-                task.id = assignment['id']
                 task.task_description = assignment['description']
                 task.task_name = assignment['name']
                 task.task_type = 'assignment'
@@ -69,7 +69,6 @@ class ImportTasksView(generics.GenericAPIView):
             assignments = response.data
             for assignment in assignments:
                 task = Task()
-                task.id = assignment['id']
                 task.task_description = assignment['description']
                 task.task_name = assignment['title']
                 task.task_type = 'quiz'
@@ -105,7 +104,6 @@ class ImportTasksView(generics.GenericAPIView):
                                 task.task_name = item['title']
                                 task.html_url=item['url']
                                 task.task_type = 'module'
-                                task.id = item['id']
                                 task.course_id = course_id
                                 task.user = self.USER
                                 tasks.append(task)
@@ -149,7 +147,6 @@ class ImportTasksView(generics.GenericAPIView):
     def save_tasks_to_db(self, tasks: list):
             for task in tasks:
                 new_task = Task.objects.create(
-                    id=task['id'],
                     task_name=task['task_name'],
                     task_type=task['task_type'],
                     task_description=ANTHROPIC_PROMPTS.summarize_text_prompt(text=task['task_description']),
@@ -164,6 +161,15 @@ class ImportTasksView(generics.GenericAPIView):
                     notes=task['notes'],
                     grade=task['grade'],
                 )
+                duplicate = Task.objects.filter(task_name=new_task.task_name, 
+                                    user=new_task.user,
+                                    course_id=new_task.course_id, 
+                                    due_date=new_task.due_date, 
+                                    html_url=new_task.html_url,
+                                    submission_link=new_task.submission_link
+                                    )
+                if duplicate.exists():
+                    continue
                 new_task.save()
 
     def get(self, request:Request, course_id:int):
@@ -198,8 +204,8 @@ class UserTasksView(generics.GenericAPIView):
         fields_compared = 0
 
         for field in fields_to_compare:
-            value1 = getattr(task1, field)
-            value2 = getattr(task2, field)
+            value1 = task1[field] or None
+            value2 = task2[field] or None
 
             if value1 is not None and value2 is not None:
                 if isinstance(value1, str) and isinstance(value2, str):
@@ -223,17 +229,98 @@ class UserTasksView(generics.GenericAPIView):
         serializer = TaskSerializer(tasks, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
+    def put(self, request: Request, course_id: int = None, task_id: int = None):
+        user = request.user
+        task = Task.objects.get(user=user, course_id=course_id, id=task_id)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     def post(self, request: Request, course_id: int = None):
         user = request.user
         tasks = Task.objects.filter(user=user, course_id=course_id)
+        
+        serializer = TaskSerializer(tasks, many=True)
 
-        for task in tasks:
+        for task in serializer.data:
             if self.task_similarity(task, request.data):
                 return Response(data={'error': 'Similar task already exists',
                                       'task': task}, status=status.HTTP_208_ALREADY_REPORTED)
             
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        new_task = TaskSerializer(data=request.data, partial=True)
+        new_task.initial_data['user'] = user.id
+        new_task.initial_data['course_id'] = course_id
+        if new_task.is_valid():
+            new_task.save()
+            return Response(data=new_task.data, status=status.HTTP_201_CREATED)
+        print(new_task.errors)
+        return Response(data=new_task.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request: Request, course_id: int = None, task_id: int = None):
+        user = request.user
+        task = Task.objects.filter(user=user, course_id=course_id, id=task_id)
+        task.delete()
+        return Response(data={'message': 'Task deleted successfully'}, status=status.HTTP_200_OK)
+    
+
+class TaskFilterView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TaskFilter
+    ordering_fields = ['status', 'due_date', 'weight', 'points_possible']
+
+    def get_queryset(self, user, course_id):
+        return Task.objects.filter(course_id=course_id, user=user)
+    
+    def get(self, request: Request, course_id: int):
+        
+        # Get the queryset
+        queryset = self.filter_queryset(self.get_queryset(request.user, course_id))
+        # Paginate the results
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        # If pagination is not required
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+
+class UserFilterView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    serializer_class = TaskSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = TaskFilter
+    ordering_fields = ['status', 'due_date', 'weight', 'points_possible']
+    
+    def get(self, request: Request):
+        
+        # Get the queryset
+        queryset = self.filter_queryset(Task.objects.filter(user=request.user))
+        # Paginate the results
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        # If pagination is not required
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    
+    
+class GeneralTasksInfoView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request):
+        tasks = Task.objects.filter(user=request.user)
+        tasks = TaskSerializer(tasks, many=True)
+        total_tasks = len(tasks.data)
+        return Response(data={'total_tasks': total_tasks, 
+                              'tasks': tasks.data}, status=status.HTTP_200_OK)

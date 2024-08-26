@@ -37,25 +37,42 @@ import { Toaster } from './ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { FcCancel } from 'react-icons/fc';
 import { GiPartyPopper } from 'react-icons/gi';
+import { FaRegTrashAlt } from 'react-icons/fa';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import TaskFilterBar from './filterBar';
 
-export default function TaskList({ tasks, onImport, courseId }) {
+export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskStatus, setTaskStatus] = useState({});
   const [taskNotes, setTaskNotes] = useState({});
   const [originalTaskStatus, setOriginalTaskStatus] = useState({});
   const [originalTaskNotes, setOriginalTaskNotes] = useState({});
   const [saveEnabled, setSaveEnabled] = useState(false);
   const [importEnabled, setImportEnabled] = useState(false);
-  const [isCreateDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [isEditDrawerOpen, setEditDrawerOpen] = useState(false);
   const { toast } = useToast();
   const [error, setError] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [taskToBeEdited, setTaskToBeEdited] = useState(null);
+  const [deleteTaskOpen, setDeleteTaskOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isQuickEdit, setIsQuickEdit] = useState(false);
 
   const handleCreateTask = (values) => {
-    setCreateDrawerOpen(false);
+    setIsCreateOpen(false);
+    onChange(true);
   };
 
   const handleEditTask = (values) => {
-    setEditDrawerOpen(false);
+    setIsEditOpen(false);
+    setIsQuickEdit(false);
+    onChange(true);
   };
 
   function mapBackendFieldsToFrontendTask(backendTask) {
@@ -110,6 +127,81 @@ export default function TaskList({ tasks, onImport, courseId }) {
     }
   };
 
+  useEffect(() => {
+    checkForChanges();
+  }, [originalTaskNotes, originalTaskStatus]);
+
+  const handleQuickSaveChanges = (task) => {
+    setIsEditOpen(true);
+    const quickEditedTask = {
+      ...task,
+      status: taskStatus[task.id],
+      notes: taskNotes[task.id],
+    };
+    setIsQuickEdit(true);
+    setTaskToBeEdited(quickEditedTask);
+
+    setOriginalTaskNotes(taskNotes);
+    setOriginalTaskStatus(taskStatus);
+  };
+
+  const handleApplyFilter = async (filters) => {
+    console.log('filters', filters);
+    try {
+      const queryParams = Object.entries(filters)
+        .filter(([key, value]) => value !== undefined && value !== '')
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+      console.log('queryParams', queryParams);
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(
+        `http://localhost:8000/tasks/${courseId}/filters/?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed to apply filters');
+        throw new Error(`HTTP error applying filters: status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
+      console.log('parsedResults', parsedResults);
+      console.log('parsedResults', response.url);
+      parsedResults && onImport(parsedResults);
+      toast({
+        title: 'Tasks Filtered',
+        description: 'Tasks have been successfully filtered',
+      });
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem applying filters:');
+      console.error(e);
+    }
+  };
+
+  const handleClearFilter = () => {
+    onImport([]);
+    onChange(true);
+    toast({
+      title: 'Filters Cleared',
+      description: 'Filters have been successfully cleared',
+    });
+  };
+
   const handleImportButtonClick = () => {
     setImportEnabled(true);
   };
@@ -124,6 +216,47 @@ export default function TaskList({ tasks, onImport, courseId }) {
         return 'bg-gray-200 text-black';
     }
   };
+
+  async function deleteTask() {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${taskToDelete.id}/`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        router.push('/');
+        return;
+      }
+
+      if (!response.ok) {
+        setError('Failed to delete task');
+        throw new Error(`HTTP error deleting task: status: ${response.status}`);
+      }
+
+      toast({
+        title: 'Task Deleted',
+        description: 'Task has been successfully deleted',
+      });
+      setDeleteTaskOpen(false);
+    } catch (e) {
+      setError(e.message);
+      console.error('There was a problem deleting the task:');
+      console.error(e);
+
+      toast({
+        title: 'Task Could Not Be Deleted',
+        description: 'There was a problem deleting the task',
+        variant: 'destructive',
+      });
+    }
+  }
 
   async function getCourseTasks() {
     try {
@@ -190,6 +323,9 @@ export default function TaskList({ tasks, onImport, courseId }) {
       <div className="flex items-center pb-8 px-8 text-4xl font-semibold text-gray-800">
         <span>Tasks</span>
       </div>
+      <div className="flex justify-between items-center py-4 mb-4 px-8 bg-white shadow-md rounded-md">
+        <TaskFilterBar onClear={handleClearFilter} onFilter={handleApplyFilter} />
+      </div>
       {tasks && (
         <Accordion type="multiple" collapsible="true" className="w-full">
           {tasks.map((task) => (
@@ -204,14 +340,18 @@ export default function TaskList({ tasks, onImport, courseId }) {
                   </span>
                 </AccordionTrigger>
 
-                <AccordionContent>{`Due Date: ${new Date(task.dueDate).toLocaleString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                })}`}</AccordionContent>
+                <AccordionContent>{`Due Date: ${
+                  task.dueDate
+                    ? new Date(task.dueDate).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })
+                    : 'None'
+                }`}</AccordionContent>
 
                 <AccordionContent>
                   <DropdownMenu>
@@ -249,11 +389,15 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
                 <AccordionContent>
                   <div className="flex h-5 items-center space-x-4 text-sm text-gray-600">
-                    {task.weight && <Label>Task Weight: {task.weight}%</Label>}
-                    {task.weight && task.points && (
-                      <Separator orientation="vertical" className="bg-gray-900" />
+                    {typeof task.weight === 'number' && task.weight !== 0 && (
+                      <Label>Task Weight: {task.weight}%</Label>
                     )}
-                    {task.points && <Label>Max. Points: {task.points}</Label>}
+
+                    <Separator orientation="vertical" className="bg-gray-900" />
+
+                    {typeof task.points === 'number' && task.points !== 0 && (
+                      <Label>Max. Points: {task.points}</Label>
+                    )}
                   </div>
                 </AccordionContent>
 
@@ -277,38 +421,89 @@ export default function TaskList({ tasks, onImport, courseId }) {
                     <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:from-purple-600 hover:via-pink-600 hover:to-indigo-600">
                       Ask StudiFlow AI about this task?
                     </Button>
-                    <Button variant="link">
-                      <span className="text-gray-600 text-lg">Task Link</span>
-                    </Button>
+                    {task.link && (
+                      <Button variant="link">
+                        <span className="text-gray-600 text-lg">Task Link</span>
+                      </Button>
+                    )}
                   </div>
                   <Button
                     disabled={!saveEnabled}
-                    className={`bg-green-500 ${!saveEnabled && 'opacity-50 cursor-not-allowed'}`}>
+                    className={`bg-green-500 ${!saveEnabled && 'opacity-50 cursor-not-allowed'}`}
+                    onClick={() => handleQuickSaveChanges(task)}>
                     Save Changes
                   </Button>
                 </AccordionContent>
               </AccordionItem>
 
               <span className="mt-4" key={task.id + 12121}>
-                <Drawer open={isEditDrawerOpen} onOpenChange={setEditDrawerOpen} direction="right">
-                  <DrawerTrigger asChild>
-                    <Button variant="ghost">
-                      <FaRegEdit size={28} />
-                    </Button>
-                  </DrawerTrigger>
-                  <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none bg-none">
-                    <DrawerHeader>
-                      <DrawerTitle className="py-4">Edit Task</DrawerTitle>
-                      <DrawerDescription>Edit Task Details.</DrawerDescription>
-                    </DrawerHeader>
-                    <TaskCreationForm task={task} onConfirm={handleEditTask} />
-                  </DrawerContent>
-                </Drawer>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsEditOpen(true);
+                    setTaskToBeEdited(task);
+                  }}>
+                  <FaRegEdit size={28} />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setDeleteTaskOpen(true);
+                    setTaskToDelete(task);
+                  }}>
+                  <FaRegTrashAlt size={28} />
+                </Button>
               </span>
             </div>
           ))}
         </Accordion>
       )}
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>Edit Task Details.</DialogDescription>
+          </DialogHeader>
+          <TaskCreationForm
+            courseId={courseId}
+            isTypeEdit
+            task={taskToBeEdited}
+            onConfirm={handleEditTask}
+            quickEdit={isQuickEdit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteTaskOpen} onOpenChange={setDeleteTaskOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>Selected Task: {taskToDelete?.title}.</DialogDescription>
+          </DialogHeader>
+          <Label>Are you sure you want to delete this task?</Label>
+          <div className="flex justify-between">
+            <Button
+              onClick={() => {
+                setDeleteTaskOpen(false);
+                setTaskToDelete(null);
+              }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                await deleteTask();
+                setDeleteTaskOpen(false);
+                setTaskToDelete(null);
+                onChange(true);
+              }}
+              variant="destructive">
+              Confirm
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {importEnabled && <Loader2 className="mr-2 h-16 w-16 animate-spin" />}
 
@@ -329,24 +524,24 @@ export default function TaskList({ tasks, onImport, courseId }) {
 
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Drawer open={isCreateDrawerOpen} onOpenChange={setCreateDrawerOpen} direction="right">
-            <DrawerTrigger asChild>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
               <Button
                 variant="ghost"
                 className="fixed bottom-12 right-12 border bg-white h-20 w-20 rounded-full border-gray-600 shadow-lg hover:bg-gray-300 hover:scale-110">
                 <FaPlus size={40} className="color-gray-600" />
               </Button>
-            </DrawerTrigger>
-            <DrawerContent className="h-screen top-0 right-0 left-auto mt-0 w-[500px] rounded-none">
-              <DrawerHeader>
-                <DrawerTitle className="py-4">New Task</DrawerTitle>
-                <DrawerDescription>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+                <DialogDescription>
                   Fill out the form below to create a new task and add it to the list.
-                </DrawerDescription>
-              </DrawerHeader>
-              <TaskCreationForm onConfirm={handleCreateTask} />
-            </DrawerContent>
-          </Drawer>
+                </DialogDescription>
+              </DialogHeader>
+              <TaskCreationForm courseId={courseId} onConfirm={handleCreateTask} />
+            </DialogContent>
+          </Dialog>
         </HoverCardTrigger>
         <HoverCardContent className="mr-6 w-auto rounded-lg">
           <p className="text-sm text-gray-600">Create New Task</p>

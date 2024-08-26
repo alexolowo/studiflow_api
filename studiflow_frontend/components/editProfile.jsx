@@ -38,8 +38,11 @@ export default function EditProfileForm({ initialData }) {
     },
   });
 
+  const goBack = () => {
+    router.back();
+  };
+
   const onSubmit = async (values) => {
-    console.log('Form Submitted:', values);
     try {
       const response = await fetch('http://localhost:8000/auth/editUser/', {
         method: 'PUT',
@@ -53,7 +56,6 @@ export default function EditProfileForm({ initialData }) {
         }),
       });
       if (response.ok) {
-        console.log('User updated successfully');
         goBack();
         toast({
           title: 'Profile Updated',
@@ -79,14 +81,8 @@ export default function EditProfileForm({ initialData }) {
     }
   };
 
-  const goBack = () => {
-    router.back();
-  };
-
-  // Watch all form fields
   const watchedValues = form.watch();
 
-  // Check if any form values have changed
   useEffect(() => {
     const hasChanges = Object.keys(watchedValues).some(
       (key) => watchedValues[key] !== initialData[key] || watchedValues[key] === ''
