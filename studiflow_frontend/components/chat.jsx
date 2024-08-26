@@ -152,7 +152,7 @@ export default function ChatUI() {
           </div>
         ))}
       </ScrollArea>
-      <div className="p-4 border-t">
+      <div className="sticky bottom-8 w-[80%] p-10 py-4 bg-gray-200 rounded-xl shadow-lg z-50 ml-30 self-center">
         <form
           onSubmit={(e) => {
             e.preventDefault();

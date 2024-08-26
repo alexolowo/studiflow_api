@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'sections.apps.SectionsConfig',
     'distributions.apps.DistributionsConfig',
     'corsheaders',
-    'chat.apps.ChatConfig'
+    'chat.apps.ChatConfig',
     'django_filters',
 ]
 

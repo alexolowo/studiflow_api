@@ -35,17 +35,9 @@ export default function TaskDrawer({ task, onChange }) {
       <DrawerContent className="w-1/3 h-full">
         <DrawerHeader>
           <DrawerTitle>{task.title}</DrawerTitle>
-          <DrawerDescription>
-            More inforamtion and resources for the selected Task
-          </DrawerDescription>
+          <DrawerDescription>More information for the selected Task</DrawerDescription>
         </DrawerHeader>
         <TaskCreationForm isTypeEdit task={task} onConfirm={onChange} />
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

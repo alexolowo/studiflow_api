@@ -19,51 +19,6 @@ export default function CourseView() {
   const [taskChange, setTaskChange] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
 
-  async function getCourseTasks() {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-
-      const response = await fetch('http://localhost:8000/tasks/load_tasks/', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.status === 401) {
-        // Remove tokens and redirect to home page
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        router.push('/');
-        return;
-      }
-
-      if (!response.ok) {
-        setError('Failed getting active tasks');
-        throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data['data'][courseId]);
-      const parsedResults = data['data'][courseId].map((task) =>
-        mapBackendFieldsToFrontendTask(task)
-      );
-      parsedResults && setTasks((prevState) => [...prevState, ...parsedResults]);
-    } catch (e) {
-      setError(e.message);
-      console.error('There was a problem fetching the tasks:');
-      console.error(e);
-    }
-  }
-
-  useEffect(() => {
-    if (importing)
-      getCourseTasks()
-        .catch((error) => console.error('error importing tasks', error))
-        .finally(() => setImporting(false));
-  }, [importing]);
-
   useEffect(() => {
     async function getUsersCourseTasks() {
       try {
