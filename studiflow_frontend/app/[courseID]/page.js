@@ -15,6 +15,7 @@ export default function CourseView() {
     const courseCode = params.courseID.split('-')[1];
     const [tasks, setTasks] = useState([]);
     const [error, setError] = useState(null);
+    const [importing, setImporting] = useState(null);
     
     const [activeTab, setActiveTab] = useState('chat');
 
