@@ -1,34 +1,105 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Label } from '@/components/ui/label';
-import { FileUp, Send } from 'lucide-react';
-
-const initialMessages = [
-  {
-    id: 1,
-    sender: 'bot',
-    text: 'Hello! How can I help you with your course today?',
-    timestamp: new Date(),
-  },
-];
+import { useState, useRef, useEffect } from 'react'
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Label } from "@/components/ui/label"
+import { FileUp, Send } from 'lucide-react'
+import { useParams } from 'next/navigation';
 
 export default function ChatUI() {
-  const [messages, setMessages] = useState(initialMessages);
-  const [inputMessage, setInputMessage] = useState('');
-  const [pdfFile, setPdfFile] = useState(null);
-  const scrollAreaRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [inputMessage, setInputMessage] = useState('');
+    const [pdfFile, setPdfFile] = useState(null);
+    const scrollAreaRef = useRef(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
 
-  const [accessToken, setAccessToken] = useState('');
+    const [accessToken, setAccessToken] = useState('');
 
-  useEffect(() => {
-    setAccessToken(window.localStorage.getItem('accessToken') || '');
-  }, []);
+    const params = useParams();
+    const courseIdentifier = params.courseID;
+
+    useEffect(() => {
+
+    }, []);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                // Get the user data
+                const response = await fetch('http://localhost:8000/auth/login/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const userData = await response.json();
+                console.log("user data is", userData);
+                setUserEmail(userData.email);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+
+        fetchUserData();
+    }, [accessToken]);
+
+
+
+    useEffect(() => {
+        console.log("Access token is set");
+        setAccessToken(window.localStorage.getItem('accessToken') || '');
+    }, [])
+
+    useEffect(() => {
+        const fetchChatHistory = async () => {
+            console.log("Fetching chat history with an email of", userEmail, "and course identifier of", courseIdentifier);
+            try {
+                const response = await fetch('http://localhost:8000/chat/chat_history', {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    },
+                    body: JSON.stringify({
+                        user_email: userEmail,
+                        course_id: courseIdentifier
+                    })
+                });
+    
+                console.log("Response status:", response.status);
+    
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+    
+                const data = await response.json();
+    
+                if (data && data.length > 0) {
+                    const sortedMessages = data.map(msg => ({
+                        ...msg,
+                        timestamp: new Date(msg.timestamp)
+                    })).sort((a, b) => a.timestamp - b.timestamp);
+    
+                    setMessages(sortedMessages);
+                }
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+            }
+        };
+
+        if (!userEmail || !courseIdentifier) return;
+    
+        fetchChatHistory();
+    }, [userEmail, courseIdentifier]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -70,31 +141,38 @@ export default function ChatUI() {
     setMessages([...messages, newUserMessage]);
     setInputMessage('');
 
-    try {
-      let response;
-      if (pdfFile) {
-        const formData = new FormData();
-        formData.append('user_id', 'rtutz');
-        formData.append('course_id', 'csc263');
-        formData.append('files', pdfFile);
+        try {
+            let response;
 
-        response = await fetch('http://localhost:8000/chat/upload', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: formData,
-        });
-      } else {
-        response = await fetch('http://localhost:8000/chat/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ query: inputMessage }),
-        });
-      }
+            if (!courseIdentifier || !userEmail) return;
+
+            if (pdfFile) {
+                const formData = new FormData();
+                formData.append('user_id', userEmail);
+                formData.append('course_id', courseIdentifier);
+                formData.append('files', pdfFile);
+
+                response = await fetch('http://localhost:8000/chat/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: formData
+                });
+            } else {
+                response = await fetch('http://localhost:8000/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        query: inputMessage,
+                        user_email: userEmail,
+                        course_id: courseIdentifier
+                    })
+                });
+            }
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
