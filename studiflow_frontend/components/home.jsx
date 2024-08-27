@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CourseHeader } from '@/components/courseHeader';
 
 export default function Home({ logout }) {
   // const [data, setData] = useState(null);
@@ -72,6 +73,9 @@ export default function Home({ logout }) {
     <>
       <div className="flex justify-between items-center py-4 px-8 bg-white shadow-md">
         <div className="text-xl font-semibold text-gray-800">Hi {username}!</div>
+        <div>
+          <CourseHeader />
+        </div>
         <div className="flex items-center space-x-4">
           <div className="relative w-12 h-12 flex items-center justify-center">
             <div className="absolute inset-0 bg-gray-200 rounded-full"></div>
