@@ -69,8 +69,6 @@ export default function Column({
     setTaskChange(false);
   }, [taskChange]);
 
-  console.log('task changed ', taskChange);
-
   return (
     <Card className="flex-1 " onDragOver={onDragOver} onDrop={(e) => onDrop(e, status)}>
       <CardHeader>

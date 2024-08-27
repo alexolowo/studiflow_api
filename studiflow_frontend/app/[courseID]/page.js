@@ -10,15 +10,14 @@ import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
 import { CourseHeader } from '@/components/courseHeader';
 
 export default function CourseView() {
-    const params = useParams();
-    const router = useRouter();
-    const courseId = params.courseID.split('-')[0];
-    const courseCode = params.courseID.split('-')[1];
-    const [tasks, setTasks] = useState([]);
-    const [error, setError] = useState(null);
-    const [taskChange, setTaskChange] = useState(false);
-    
-    const [activeTab, setActiveTab] = useState('chat');
+  const params = useParams();
+  const router = useRouter();
+  const courseId = params.courseID.split('-')[0];
+  const courseCode = params.courseID.split('-')[1];
+  const [tasks, setTasks] = useState([]);
+  const [error, setError] = useState(null);
+  const [taskChange, setTaskChange] = useState(false);
+  const [activeTab, setActiveTab] = useState('tasks');
 
   useEffect(() => {
     async function getUsersCourseTasks() {
@@ -136,7 +135,7 @@ export default function CourseView() {
           <div className="sticky z-50 top-4 mr-12 mt-8 flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800 rounded-xl">
             {/* TODO: make a dropdown to switch courses from here */}
             {courseCode}
-            <CourseHeader courses={courseData} currentCourse={chosenCourse} />
+            <CourseHeader currentCourse={chosenCourse} />
           </div>
           {renderContent()}
         </main>
