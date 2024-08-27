@@ -41,8 +41,8 @@ class ResourceUpload(generics.GenericAPIView):
             return Response({"error": "User ID and files are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # TODO: Change the code below to remap to the Amazon S3 bucket (for later)
-        # upload_dir = os.path.join(settings.MEDIA_ROOT, f'uploads/{user_id}/{course_id}')
-        # os.makedirs(upload_dir, exist_ok=True)
+        upload_dir = os.path.join(settings.MEDIA_ROOT, f'uploads/{user_id}/{course_id}')
+        os.makedirs(upload_dir, exist_ok=True)
         
         file_names = []
         for file in files:
@@ -158,7 +158,7 @@ class Chat(generics.GenericAPIView):
 
         chat_id = self.get_or_create_chat(user_email, course_id)
 
-        results = self.query_postgres(query_text, k=3)
+        results = self.query_postgres(query_text, user_email, course_id, k=3)
         
         if len(results) == 0 or results[0][1] < 0.7:
             # No matching results from the database
@@ -207,14 +207,18 @@ class Chat(generics.GenericAPIView):
                 cur.execute("INSERT INTO messages (chat_id, sender, text) VALUES (%s, %s, %s)", (chat_id, sender, text))
                 conn.commit()
 
-    def query_postgres(self, query_text, k=3):
+    def query_postgres(self, query_text, user_email, course_id, k=3):
         embeddings = OpenAIEmbeddings()
         query_embedding = embeddings.embed_query(query_text)
         DATABASE_URL = os.environ['DATABASE_URL']
 
         with psycopg2.connect(DATABASE_URL) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT content, embedding FROM embeddings")
+                cur.execute("""
+                    SELECT content, embedding 
+                    FROM embeddings 
+                    WHERE user_name = %s AND course_id = %s
+                """, (user_email, course_id))
                 results = cur.fetchall()
 
         similarities = [(content, self.cosine_similarity(np.array(query_embedding), self.string_to_array(embedding)))
