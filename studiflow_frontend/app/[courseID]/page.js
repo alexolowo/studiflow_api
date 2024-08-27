@@ -1,12 +1,13 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import CourseSideNav from '@/components/courseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
-
-
+import HeatMap from '@/components/heatMap';
+import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
+import { CourseHeader } from '@/components/courseHeader';
 
 export default function CourseView() {
     const params = useParams();
@@ -19,130 +20,127 @@ export default function CourseView() {
     
     const [activeTab, setActiveTab] = useState('chat');
 
-    function mapBackendFieldsToFrontendTask(backendTask) {
-        return {
-            id: backendTask.id,
-            title: backendTask.task_name,
-            description: backendTask.task_description,
-            dueDate: backendTask.due_date,
-            status: backendTask.status,
-            link: backendTask.submission_link || backendTask.html_url,
-            weight: backendTask.weight,
-            points: backendTask.points_possible,
-            notes: backendTask.notes,
-            grade: backendTask.grade
-        };
+  useEffect(() => {
+    async function getUsersCourseTasks() {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+
+        const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (response.status === 401) {
+          // Remove tokens and redirect to home page
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          router.push('/');
+          return;
+        }
+
+        if (!response.ok) {
+          setError('Failed getting active tasks');
+          throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
+        parsedResults && setTasks(parsedResults);
+      } catch (e) {
+        setError(e.message);
+        console.error('There was a problem fetching the tasks:');
+        console.error(e);
+      } finally {
+        setTaskChange(false);
+      }
     }
 
-    async function getCourseTasks() {
-        try {
-            const accessToken = localStorage.getItem('accessToken');
+    getUsersCourseTasks();
+  }, [taskChange]);
 
-            const response = await fetch('http://localhost:8000/tasks/load_tasks/', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+  const [courseData, setCourseData] = useState([]);
 
-            if (response.status === 401) {
-                // Remove tokens and redirect to home page
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                router.push('/');
-                return;
-            }
+  useEffect(() => {
+    async function getCourses() {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
 
-            if (!response.ok) {
-                setError("Failed getting active tasks");
-                throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
-            }
+        const response = await fetch('http://localhost:8000/courses/', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-            const data = await response.json();
-            console.log(data['data'][courseId]);
-            const parsedResults = data['data'][courseId].map((task) => mapBackendFieldsToFrontendTask(task));
-            parsedResults && setTasks((prevState) => ([
-                ...prevState,
-                ...parsedResults,
-            ]));
-        } catch (e) {
-            setError(e.message);
-            console.error("There was a problem fetching the tasks:");
-            console.error(e);
+        if (response.status === 401) {
+          // Remove tokens and redirect to home page
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          router.push('/');
+          return;
         }
+
+        if (!response.ok) {
+          setError('Failed getting active courses');
+          throw new Error(`HTTP error getting courses! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        data && setCourseData(parseCourses(data.courses));
+      } catch (e) {
+        setError(e.message);
+        console.error('There was a problem fetching the courses:');
+        console.error(e);
+      }
     }
 
-    useEffect(() => {
-        if (importing)
-            getCourseTasks().catch((error) => console.error('error importing tasks', error)).finally(() => setImporting(false));
-    }, [importing]);
+    getCourses();
+  }, []);
 
-    useEffect(() => {
-        async function getUsersCourseTasks() {
-            try {
-                const accessToken = localStorage.getItem('accessToken');
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'chat':
+        return <Chat courseId={courseId} />;
+      case 'tasks':
+        return (
+          <TaskList
+            tasks={tasks}
+            onImport={setTasks}
+            courseId={courseId}
+            onChange={setTaskChange}
+          />
+        );
+      case 'resources':
+        return <div>Resources Content</div>;
+      case 'analytics':
+        return <HeatMap />;
+      default:
+        return null;
+    }
+  };
 
-                const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
+  const chosenCourse = courseData.filter((course) => course.courseId == courseId);
 
-                if (response.status === 401) {
-                    // Remove tokens and redirect to home page
-                    localStorage.removeItem('accessToken');
-                    localStorage.removeItem('refreshToken');
-                    router.push('/');
-                    return;
-                }
-
-                if (!response.ok) {
-                    setError("Failed getting active tasks");
-                    throw new Error(`HTTP error getting tasks");! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log(data);
-                const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
-                parsedResults && setTasks(parsedResults);
-            } catch (e) {
-                setError(e.message);
-                console.error("There was a problem fetching the tasks:");
-                console.error(e);
-            }
-        }
-
-        getUsersCourseTasks();
-
-    }, []);
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'chat':
-                return <Chat courseId={courseId} />
-            case 'tasks':
-                return <TaskList onImport={setImporting} tasks={[...tasks]} />;
-            case 'resources':
-                return <div>Resources Content</div>;
-            default:
-                return null;
-        }
-    };
-
-    return (
-        <div className="flex h-screen">
-            <CourseSideNav activeTab={activeTab} setActiveTab={setActiveTab} />
-            <main className="flex-1 flex flex-col">
-                <div className='flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800'>
-                    {/* TODO: make a dropdown to switch courses from here */}
-                    {courseCode}
-                </div>
-                <div className="flex-1 overflow-hidden">
-                    {renderContent()}
-                </div>
-            </main>
+  return (
+    <>
+      <div className="flex h-screen">
+        <div className="fixed h-full">
+          <CourseSideNav activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
-    );
+        <main className="flex-1 ml-56">
+          <div className="sticky z-50 top-4 mr-12 mt-8 flex items-center py-8 px-8 bg-gray-100 shadow-md text-2xl font-semibold text-gray-800 rounded-xl">
+            {/* TODO: make a dropdown to switch courses from here */}
+            {courseCode}
+            <CourseHeader courses={courseData} currentCourse={chosenCourse} />
+          </div>
+          {renderContent()}
+        </main>
+      </div>
+    </>
+  );
 }

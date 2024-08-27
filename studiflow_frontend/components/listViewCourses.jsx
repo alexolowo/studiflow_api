@@ -3,23 +3,9 @@
 import { useEffect, useState } from 'react';
 import CourseCard from './courseCard';
 import { useRouter } from 'next/navigation';
+import { parseCourses } from '@/lib/utils';
 
 // A helper function
-function parseCourses(data) {
-  return data.map((course) => {
-    const totalTasks = Math.floor(Math.random() * 12) + 1;
-    const completedTasks = Math.floor(Math.random() * totalTasks);
-    console.log(course.id, 'list');
-
-    return {
-      courseId: course.id,
-      courseCode: course.course_code,
-      courseName: course.name,
-      totalTasks: totalTasks,
-      completedTasks: completedTasks,
-    };
-  });
-}
 
 export default function ListViewCourses() {
   const [error, setError] = useState('');
@@ -70,8 +56,6 @@ export default function ListViewCourses() {
   //     }
   // ]);
   const [data, setData] = useState([]);
-
-  console.log(data);
 
   useEffect(() => {
     async function getCourses() {

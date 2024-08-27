@@ -23,22 +23,22 @@ class Task(models.Model):
         - A task can have multiple associated resources (many-to-many relationship).
     '''
 
-    id = models.IntegerField(primary_key=True)
+    id = models.BigAutoField(primary_key=True)
     task_name = models.CharField(max_length=255)
     task_type = models.CharField(max_length=255)
-    task_description = models.TextField(null=True)
+    task_description = models.TextField(null=True, blank=True)
     due_date = models.DateTimeField(null=True)
-    status = models.CharField(max_length=255)
+    status = models.CharField(max_length=255, default='TO-DO')
     submission_link = models.CharField(max_length=255, null=True)
     weight = models.FloatField(default=0)
     points_possible = models.FloatField(default=100)
     html_url = models.CharField(max_length=255, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='tasks', default=0)
     course_id = models.IntegerField(default=0)
-    notes= models.TextField(null=True)
+    notes= models.TextField(null=True, blank=True, default='')
     grade = models.FloatField(default=0)
 
-    REQUIRED_FIELDS = ['task_name', 'task_type', 'html_url', 'course_id', 'user', 'id']
+    REQUIRED_FIELDS = ['task_name', 'course_id', 'user']
 
     def __str__(self):
         return self.task_name
