@@ -26,4 +26,5 @@ urlpatterns = [
     path('tasks/', include('tasks.urls')),
     path('distributions/', include('distributions.urls')),
     path('chat/', include('chat.urls')),
+    path('resources/', include('resources.urls')),
 ]
