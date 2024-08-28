@@ -5,13 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Resource
 from .serializers import ResourceSerializer
 import cloudinary.uploader
+import cloudinary.api
 import os
 import psycopg2
 from psycopg2.extras import execute_values
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
-from courses.models import Course  # Assuming you have a Course model
+import tempfile
 
 cloudinary.config( 
     cloud_name = os.environ['CLOUDINARY_CLOUD_NAME'], 
@@ -26,18 +27,14 @@ class ResourceUploadView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        print(request.data)
         course_id = request.data.get('course_id')
         files = request.FILES.getlist('files')
 
         if not course_id or not files:
             return Response({"error": "Course ID and files are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the course exists
-        course = get_object_or_404(Course, id=course_id)
         uploaded_resources = []
         for file in files:
-            print(file)
             # Upload file to Cloudinary
             upload_result = cloudinary.uploader.upload(file, resource_type="auto")
             
@@ -55,44 +52,47 @@ class ResourceUploadView(generics.CreateAPIView):
             resource = serializer.save()
             
             # Process the file and generate embeddings
-            self.process_file(resource, upload_result['secure_url'])
+            self.process_file(resource, upload_result['public_id'])
             
             uploaded_resources.append(serializer.data)
 
         return Response(uploaded_resources, status=status.HTTP_201_CREATED)
 
-    def process_file(self, resource, file_url):
+    def process_file(self, resource, public_id):
         # Download the file from Cloudinary
-        temp_file_path = f"/tmp/{resource.resource_name}"
-        os.system(f"curl '{file_url}' -o {temp_file_path}")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(resource.resource_name)[1]) as temp_file:
+            cloudinary.api.download(public_id, file=temp_file.name)
+            temp_file_path = temp_file.name
 
-        # Process the file based on its type
-        if resource.resource_type == 'application/pdf':
-            loader = PyPDFLoader(temp_file_path)
-            documents = loader.load()
-        else:
-            # For other file types, you might need to implement different loaders
-            with open(temp_file_path, 'r') as file:
-                documents = [file.read()]
+        try:
+            # Process the file based on its type
+            if resource.resource_type == 'application/pdf':
+                loader = PyPDFLoader(temp_file_path)
+                documents = loader.load()
+            else:
+                # For other file types, you might need to implement different loaders
+                with open(temp_file_path, 'r') as file:
+                    documents = [file.read()]
 
-        # Split the text
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=300,
-            chunk_overlap=100,
-            length_function=len,
-            add_start_index=True,
-        )
-        chunks = text_splitter.split_documents(documents)
+            # Split the text
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=300,
+                chunk_overlap=100,
+                length_function=len,
+                add_start_index=True,
+            )
+            chunks = text_splitter.split_documents(documents)
 
-        # Generate embeddings and save to database
-        self.save_embeddings(chunks, resource)
+            # Generate embeddings and save to database
+            self.save_embeddings(chunks, resource)
 
-        # Update resource content
-        resource.resource_content = ' '.join([chunk.page_content for chunk in chunks])
-        resource.save()
+            # Update resource content
+            resource.resource_content = ' '.join([chunk.page_content for chunk in chunks])
+            resource.save()
 
-        # Clean up temporary file
-        os.remove(temp_file_path)
+        finally:
+            # Clean up temporary file
+            os.unlink(temp_file_path)
 
     def save_embeddings(self, chunks, resource):
         embeddings = OpenAIEmbeddings()
