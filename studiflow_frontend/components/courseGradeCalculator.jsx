@@ -13,7 +13,12 @@ export default function CourseGradeCalculator({ courseId }) {
   const [tasks, setTasks] = useState([]);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [confirmedTasks, setConfirmedTasks] = useState([]);
-  const [progress, setProgress] = useState({ current: 0, completed: 0 });
+  const [progress, setProgress] = useState({
+    current: 0,
+    completed: 0,
+    assignedWeight: 0,
+    completedWeight: 0,
+  });
   const [tasksToDelete, setTasksToDelete] = useState([]);
   const router = useRouter();
 
@@ -75,18 +80,24 @@ export default function CourseGradeCalculator({ courseId }) {
     let totalWeight = 0;
     let weightedGrade = 0;
     let completedWeight = 0;
+    let assignedWeight = 0;
 
     confirmedTasks.forEach((task) => {
-      if (task.grade && task.maxGrade && task.weight) {
-        totalWeight += task.weight;
-        weightedGrade += (task.grade / task.maxGrade) * task.weight;
-        completedWeight += task.weight;
+      if (task.weight) {
+        assignedWeight += task.weight;
+        if (task.grade && task.maxGrade) {
+          totalWeight += task.weight;
+          weightedGrade += (task.grade / task.maxGrade) * task.weight;
+          completedWeight += task.weight;
+        }
       }
     });
 
     setProgress({
       current: (weightedGrade / totalWeight) * 100,
       completed: (completedWeight / 100) * 100,
+      assignedWeight: (assignedWeight / 100) * 100,
+      completedWeight: weightedGrade,
     });
   };
 
@@ -204,14 +215,19 @@ export default function CourseGradeCalculator({ courseId }) {
                   fill: '#8884d8',
                 },
                 {
-                  name: 'Completed',
-                  value: progress.completed,
+                  name: 'Assigned Weight',
+                  value: progress.assignedWeight,
                   fill: '#82ca9d',
+                },
+                {
+                  name: 'Completed Weight',
+                  value: progress.completedWeight,
+                  fill: '#ffc658',
                 },
                 {
                   name: 'Current Grade',
                   value: progress.current || 0,
-                  fill: '#ffc658',
+                  fill: '#ff8042',
                 },
               ]}
               startAngle={180}
@@ -223,8 +239,9 @@ export default function CourseGradeCalculator({ courseId }) {
                 angleAxisId={0}
                 data={[
                   { value: 100, fill: '#8884d8' },
-                  { value: progress.completed, fill: '#82ca9d' },
-                  { value: progress.current || 0, fill: '#ffc658' },
+                  { value: progress.assignedWeight, fill: '#82ca9d' },
+                  { value: progress.completedWeight, fill: '#ffc658' },
+                  { value: progress.current || 0, fill: '#ff8042' },
                 ]}
               />
               <Text
@@ -238,33 +255,43 @@ export default function CourseGradeCalculator({ courseId }) {
             </RadialBarChart>
             <div className="absolute top-0 left-0 w-full h-full">
               <svg width="100%" height="100%">
-                <line x1="100%" y1="50%" x2="85%" y2="50%" stroke="#8884d8" strokeWidth="2" />
+                <line x1="100%" y1="40%" x2="85%" y2="40%" stroke="#8884d8" strokeWidth="2" />
                 <text
                   x="100%"
-                  y="45%"
+                  y="35%"
                   dominantBaseline="middle"
                   textAnchor="end"
                   fill="#8884d8"
                   fontSize="14">
                   100%
                 </text>
-                <line x1="100%" y1="65%" x2="85%" y2="65%" stroke="#82ca9d" strokeWidth="2" />
+                <line x1="100%" y1="55%" x2="85%" y2="55%" stroke="#82ca9d" strokeWidth="2" />
                 <text
                   x="100%"
-                  y="60%"
+                  y="50%"
                   dominantBaseline="middle"
                   textAnchor="end"
                   fill="#82ca9d"
                   fontSize="14">
-                  {`${Math.round(progress.completed)}%`}
+                  {`${Math.round(progress.assignedWeight)}%`}
                 </text>
-                <line x1="100%" y1="80%" x2="85%" y2="80%" stroke="#ffc658" strokeWidth="2" />
+                <line x1="100%" y1="70%" x2="85%" y2="70%" stroke="#ffc658" strokeWidth="2" />
                 <text
                   x="100%"
-                  y="75%"
+                  y="65%"
                   dominantBaseline="middle"
                   textAnchor="end"
                   fill="#ffc658"
+                  fontSize="14">
+                  {`${Math.round(progress.completedWeight)}%`}
+                </text>
+                <line x1="100%" y1="85%" x2="85%" y2="85%" stroke="#ff8042" strokeWidth="2" />
+                <text
+                  x="100%"
+                  y="80%"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  fill="#ff8042"
                   fontSize="14">
                   {`${Math.round(progress.current || 0)}%`}
                 </text>
@@ -276,7 +303,7 @@ export default function CourseGradeCalculator({ courseId }) {
               <HoverCardTrigger>
                 <div className="flex items-center cursor-help">
                   <div className="w-4 h-4 bg-[#8884d8] mr-2"></div>
-                  <span>Course Total Weight...?</span>
+                  <span>Course Total Weight</span>
                 </div>
               </HoverCardTrigger>
               <HoverCardContent>
@@ -287,19 +314,31 @@ export default function CourseGradeCalculator({ courseId }) {
               <HoverCardTrigger>
                 <div className="flex items-center mt-2 cursor-help">
                   <div className="w-4 h-4 bg-[#82ca9d] mr-2"></div>
-                  <span>Weight of All Tasks...?</span>
+                  <span>Assigned Weight</span>
                 </div>
               </HoverCardTrigger>
               <HoverCardContent>
-                This shows the total weight of all tasks you've entered grades for. It's calculated
-                by summing up the weights of all tasks with grades.
+                This shows the total weight of all tasks that have been assigned in the course so
+                far.
               </HoverCardContent>
             </HoverCard>
             <HoverCard>
               <HoverCardTrigger>
                 <div className="flex items-center mt-2 cursor-help">
                   <div className="w-4 h-4 bg-[#ffc658] mr-2"></div>
-                  <span>Current Grade (Adjusted for Weight)...?</span>
+                  <span>Completed Weight</span>
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                This represents the weight of tasks you've completed, as a percentage of the
+                assigned weight.
+              </HoverCardContent>
+            </HoverCard>
+            <HoverCard>
+              <HoverCardTrigger>
+                <div className="flex items-center mt-2 cursor-help">
+                  <div className="w-4 h-4 bg-[#ff8042] mr-2"></div>
+                  <span>Current Grade (Adjusted for Weight)</span>
                 </div>
               </HoverCardTrigger>
               <HoverCardContent>

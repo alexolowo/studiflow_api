@@ -64,6 +64,14 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [isQuickEdit, setIsQuickEdit] = useState(false);
 
+  const sortTasksByDueDate = (tasks) => {
+    return [...tasks].sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(b.dueDate) - new Date(a.dueDate);
+    });
+  };
+
   const handleCreateTask = (values) => {
     setIsCreateOpen(false);
     onChange(true);
@@ -93,7 +101,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   useEffect(() => {
     const initialStatuses = {};
     const initialNotes = {};
-    tasks.forEach((task) => {
+    const sortedTasks = sortTasksByDueDate(tasks);
+    sortedTasks.forEach((task) => {
       initialStatuses[task.id] = task.status || 'TO-DO';
       initialNotes[task.id] = task.notes || '';
     });
@@ -323,12 +332,13 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
       <div className="flex items-center pb-8 px-8 text-4xl font-semibold text-gray-800">
         <span>Tasks</span>
       </div>
-      <div className="flex justify-between items-center py-4 mb-4 px-8 bg-white shadow-md rounded-md">
+      <div className="flex flex-col justify-between items-center py-4 mb-4 px-8 bg-white shadow-md rounded-xl">
         <TaskFilterBar onClear={handleClearFilter} onFilter={handleApplyFilter} />
+        <p className="text-sm text-gray-500 mt-2">Tasks are sorted by due date by default</p>
       </div>
       {tasks && (
         <Accordion type="multiple" collapsible="true" className="w-full">
-          {tasks.map((task) => (
+          {sortTasksByDueDate(tasks).map((task) => (
             <div className="flex justify-between">
               <AccordionItem key={task.id} value={task.id} className="flex-grow">
                 <AccordionTrigger>
