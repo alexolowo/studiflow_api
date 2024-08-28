@@ -5,14 +5,19 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Resource
 from .serializers import ResourceSerializer
 import cloudinary.uploader
-import cloudinary.api
+import cloudinary
 import os
 import psycopg2
 from psycopg2.extras import execute_values
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import PyPDFLoader, TextLoader
 import tempfile
+import requests
+from pypdf.errors import EmptyFileError
+import logging
+
+logger = logging.getLogger(__name__)
 
 cloudinary.config( 
     cloud_name = os.environ['CLOUDINARY_CLOUD_NAME'], 
@@ -35,10 +40,20 @@ class ResourceUploadView(generics.CreateAPIView):
 
         uploaded_resources = []
         for file in files:
-            # Upload file to Cloudinary
+            existing_resource = Resource.objects.filter(
+                user=user,
+                course_id=course_id,
+                resource_name=file.name
+            ).first()
+
+            if existing_resource:
+                return Response(
+                    {"error": f"A file named '{file.name}' already exists for this course."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             upload_result = cloudinary.uploader.upload(file, resource_type="auto")
             
-            # Create Resource object
             resource_data = {
                 'resource_name': file.name,
                 'resource_type': file.content_type,
@@ -51,30 +66,47 @@ class ResourceUploadView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             resource = serializer.save()
             
-            # Process the file and generate embeddings
-            self.process_file(resource, upload_result['public_id'])
-            
-            uploaded_resources.append(serializer.data)
+            try:
+                self.process_file(resource, upload_result['secure_url'])
+                uploaded_resources.append(serializer.data)
+            except Exception as e:
+                logger.error(f"Error processing file {file.name}: {str(e)}")
+                resource.delete()  
+                return Response({"error": f"Error processing file {file.name}: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(uploaded_resources, status=status.HTTP_201_CREATED)
 
-    def process_file(self, resource, public_id):
-        # Download the file from Cloudinary
+    def process_file(self, resource, secure_url):
+        download_url = secure_url.replace('/upload/', '/upload/fl_attachment/')
+        
+        logger.info(f"Downloading file from: {download_url}")
+
+        response = requests.get(download_url)
+        
+        if response.status_code != 200:
+            raise Exception(f"Failed to download file from Cloudinary. Status code: {response.status_code}")
+
+        logger.info(f"Downloaded file size: {len(response.content)} bytes")
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(resource.resource_name)[1]) as temp_file:
-            cloudinary.api.download(public_id, file=temp_file.name)
+            temp_file.write(response.content)
             temp_file_path = temp_file.name
 
         try:
-            # Process the file based on its type
             if resource.resource_type == 'application/pdf':
-                loader = PyPDFLoader(temp_file_path)
-                documents = loader.load()
+                try:
+                    loader = PyPDFLoader(temp_file_path)
+                    documents = loader.load()
+                except EmptyFileError:
+                    logger.error(f"Empty PDF file: {resource.resource_name}")
+                    raise Exception("The PDF file is empty or corrupted")
             else:
-                # For other file types, you might need to implement different loaders
-                with open(temp_file_path, 'r') as file:
-                    documents = [file.read()]
+                loader = TextLoader(temp_file_path)
+                documents = loader.load()
 
-            # Split the text
+            if not documents:
+                raise Exception("No content could be extracted from the file")
+
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=300,
                 chunk_overlap=100,
@@ -83,15 +115,12 @@ class ResourceUploadView(generics.CreateAPIView):
             )
             chunks = text_splitter.split_documents(documents)
 
-            # Generate embeddings and save to database
             self.save_embeddings(chunks, resource)
 
-            # Update resource content
             resource.resource_content = ' '.join([chunk.page_content for chunk in chunks])
             resource.save()
 
         finally:
-            # Clean up temporary file
             os.unlink(temp_file_path)
 
     def save_embeddings(self, chunks, resource):
@@ -105,6 +134,7 @@ class ResourceUploadView(generics.CreateAPIView):
                     embedding = embeddings.embed_query(chunk.page_content)
                     data.append((resource.user.id, resource.course_id, chunk.page_content, embedding, resource.resource_name))
                 
+                # TODO: update this to take id instead of username
                 execute_values(cur, 
                                "INSERT INTO embeddings (user_name, course_id, content, embedding, source_file) VALUES %s",
                                data)
@@ -114,29 +144,55 @@ class ResourceUploadView(generics.CreateAPIView):
 class ResourceList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ResourceSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return Resource.objects.filter(user=user, course_id=self.kwargs['course_id'])
     
-    def get(self, request, *args, **kwargs):
-        course_id = kwargs.get('course_id')
-        queryset = self.get_queryset(course_id)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(data=serializer.data)
-    
-
-class ResourceDelete(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = Resource.objects.all()
-    
-    def delete(self, request, *args, **kwargs):
-        resource_id = kwargs.get('pk')
+    def get(self, request, course_id):
         user = request.user
+        resources = Resource.objects.filter(user=user, course_id=course_id)
+        serializer = ResourceSerializer(resources, many=True)
+        return Response(serializer.data)
+    
 
-        try:
-            resource = get_object_or_404(Resource, id=resource_id, user=user)
-            resource.delete()
-            return Response({"message": "Resource deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        except Resource.DoesNotExist:
-            return Response({"error": "Resource not found or you don't have permission to delete it"}, status=status.HTTP_404_NOT_FOUND)
+class ResourceDelete(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        resource_ids = request.data.get('ids', [])
+        
+        deleted_resources = []
+        errors = []
+
+        for resource_id in resource_ids:
+            try:
+                resource = Resource.objects.get(id=resource_id, user=user)
+                
+                # Extract public_id from the Cloudinary URL
+                public_id = resource.resource_link.split('/')[-1].split('.')[0]
+                
+                # Delete file from Cloudinary
+                try:
+                    result = cloudinary.uploader.destroy(public_id)
+                    if result.get('result') == 'ok':
+                        # If Cloudinary deletion is successful, delete the resource from the database
+                        resource.delete()
+                        deleted_resources.append(resource_id)
+                    else:
+                        errors.append(f"Failed to delete resource {resource_id} from Cloudinary")
+                except Exception as e:
+                    logger.error(f"Error deleting resource {resource_id} from Cloudinary: {str(e)}")
+                    errors.append(f"Error deleting resource {resource_id} from Cloudinary")
+            
+            except Resource.DoesNotExist:
+                errors.append(f"Resource {resource_id} not found or does not belong to the user")
+
+        if errors:
+            return Response({
+                "message": "Some resources could not be deleted",
+                "deleted": deleted_resources,
+                "errors": errors
+            }, status=status.HTTP_207_MULTI_STATUS)
+        
+        return Response({
+            "message": "Resources deleted successfully",
+            "deleted": deleted_resources
+        }, status=status.HTTP_200_OK)

@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import CourseSideNav from '@/components/courseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
-import HeatMap from '@/components/heatMap';
 import CourseGradeCalculator from '@/components/courseGradeCalculator';
+import Resources from '@/components/resources';
 import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
 import { CourseHeader } from '@/components/courseHeader';
 
@@ -116,7 +116,7 @@ export default function CourseView() {
           />
         );
       case 'resources':
-        return <div>Resources Content</div>;
+        return <Resources courseId={courseId} />;
       case 'analytics':
         return <CourseGradeCalculator courseId={courseId} />;
       default:
