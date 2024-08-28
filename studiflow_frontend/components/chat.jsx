@@ -216,7 +216,7 @@ export default function ChatUI() {
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+      <ScrollArea className="flex-grow p-8" ref={scrollAreaRef}>
         {messages.map((message) => (
           <div
             key={message.id}

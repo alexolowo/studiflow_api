@@ -10,9 +10,9 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
   const [due_date_before, setDueDateBefore] = useState(undefined);
   const [weight, setWeight] = useState(undefined);
   const [points_possible, setPoints] = useState(undefined);
-  const [order_by, setOrder] = useState(undefined);
+  // const [order_by, setOrder] = useState(undefined);
   const [statusKey, setStatusKey] = React.useState(+new Date() + 1);
-  const [orderKey, setOrderKey] = React.useState(+new Date());
+  // const [orderKey, setOrderKey] = React.useState(+new Date());
 
   const handleFilter = () => {
     onFilter({
@@ -21,7 +21,7 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
       due_date_before: due_date_before ? due_date_before.toISOString() : undefined,
       weight,
       points_possible,
-      order_by,
+      // order_by,
     });
   };
 
@@ -31,7 +31,7 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
     setDueDateBefore(undefined);
     setWeight(undefined);
     setPoints(undefined);
-    setOrder(undefined);
+    // setOrder(undefined);
     onClear();
   };
 
@@ -56,6 +56,7 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
         placeholder="Weight"
         value={weight}
         onChange={(e) => setWeight(e.target.value)}
+        key={weight}
       />
 
       <Input
@@ -63,9 +64,10 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
         placeholder="Points"
         value={points_possible}
         onChange={(e) => setPoints(e.target.value)}
+        key={points_possible}
       />
 
-      <Select onValueChange={setOrder} value={order_by} key={orderKey}>
+      {/* <Select onValueChange={setOrder} value={order_by} key={orderKey}>
         <SelectTrigger>
           <SelectValue placeholder="Order By" />
         </SelectTrigger>
@@ -75,14 +77,14 @@ const TaskFilterBar = ({ onFilter, onClear }) => {
           <SelectItem value="weight">Weight</SelectItem>
           <SelectItem value="points_possible">Points</SelectItem>
         </SelectContent>
-      </Select>
+      </Select> */}
 
       <Button
         onClick={(e) => {
           e.stopPropagation();
           handleClear();
           setStatusKey(+new Date() + 1);
-          setOrderKey(+new Date());
+          // setOrderKey(+new Date());
         }}
         variant="outline"
         className="bg-gray-200">

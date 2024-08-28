@@ -6,6 +6,7 @@ import CourseSideNav from '@/components/courseSideNav';
 import Chat from '@/components/chat';
 import TaskList from '@/components/taskList';
 import HeatMap from '@/components/heatMap';
+import CourseGradeCalculator from '@/components/courseGradeCalculator';
 import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
 import { CourseHeader } from '@/components/courseHeader';
 
@@ -117,7 +118,7 @@ export default function CourseView() {
       case 'resources':
         return <div>Resources Content</div>;
       case 'analytics':
-        return <HeatMap />;
+        return <CourseGradeCalculator courseId={courseId} />;
       default:
         return null;
     }
