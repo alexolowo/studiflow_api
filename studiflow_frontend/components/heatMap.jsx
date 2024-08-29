@@ -26,12 +26,15 @@ const HeatMap = () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
 
-        const response = await fetch(`http://localhost:8000/tasks/general/`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `https://studiflow-a4bd949e558f.herokuapp.com/tasks/general/`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         if (response.status === 401) {
           // Remove tokens and redirect to home page

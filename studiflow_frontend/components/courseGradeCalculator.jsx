@@ -29,12 +29,15 @@ export default function CourseGradeCalculator({ courseId }) {
   const fetchTasks = async (courseId) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId}/`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');

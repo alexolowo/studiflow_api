@@ -28,7 +28,7 @@ const CourseCard = ({ course }) => {
       try {
         const accessToken = localStorage.getItem('accessToken');
         const response = await fetch(
-          `http://localhost:8000/tasks/${course.courseId}/filters/?status=DONE`,
+          `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${course.courseId}/filters/?status=DONE`,
           {
             method: 'GET',
             headers: {
@@ -65,12 +65,15 @@ const CourseCard = ({ course }) => {
       try {
         const accessToken = localStorage.getItem('accessToken');
 
-        const response = await fetch(`http://localhost:8000/tasks/${course.courseId}/`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${course.courseId}/`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         if (response.status === 401) {
           // Remove tokens and redirect to home page
@@ -101,12 +104,15 @@ const CourseCard = ({ course }) => {
   const handleDeleteCourse = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/courses/delete/${course.courseId}/`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/courses/delete/${course.courseId}/`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.ok) {
         window.location.reload();

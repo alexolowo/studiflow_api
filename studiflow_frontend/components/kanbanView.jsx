@@ -15,7 +15,7 @@ export default function KanbanView() {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/general/`, {
+      const response = await fetch(`https://studiflow-a4bd949e558f.herokuapp.com/tasks/general/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -50,14 +50,17 @@ export default function KanbanView() {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${task.courseId}/${task.id}/`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: status }),
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${task.courseId}/${task.id}/`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: status }),
+        }
+      );
 
       if (response.status === 401) {
         // Remove tokens and redirect to home page
@@ -137,13 +140,16 @@ export default function KanbanView() {
         .join('&');
       console.log('queryParams', queryParams);
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/tasks/filters/?${queryParams}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/filters/?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');

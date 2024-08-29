@@ -154,7 +154,7 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
       console.log('queryParams', queryParams);
       const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(
-        `http://localhost:8000/tasks/${courseId}/filters/?${queryParams}`,
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId}/filters/?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -219,13 +219,16 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   async function deleteTask() {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/tasks/${courseId}/${taskToDelete.id}/`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId}/${taskToDelete.id}/`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
@@ -261,13 +264,16 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/load_tasks/${courseId}/`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/load_tasks/${courseId}/`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');

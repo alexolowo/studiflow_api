@@ -42,13 +42,16 @@ const Resources: React.FC = ({ courseId }: { courseId: number }) => {
   const fetchResources = async (shouldRefresh = false) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`http://localhost:8000/resources/${courseId}/`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/resources/${courseId}/`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch resources');
@@ -91,7 +94,7 @@ const Resources: React.FC = ({ courseId }: { courseId: number }) => {
     if (window.confirm('Are you sure you want to delete the selected resources?')) {
       try {
         const token = localStorage.getItem('accessToken');
-        await fetch(`http://localhost:8000/resources/delete/`, {
+        await fetch(`https://studiflow-a4bd949e558f.herokuapp.com/resources/delete/`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -118,13 +121,16 @@ const Resources: React.FC = ({ courseId }: { courseId: number }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/resources/upload/', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        'https://studiflow-a4bd949e558f.herokuapp.com/resources/upload/',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       if (response.status === 400) {
         toast({

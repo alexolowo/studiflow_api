@@ -56,22 +56,25 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`http://localhost:8000/tasks/${courseId || task.courseId}/`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          task_name: values.title,
-          task_description: values.description,
-          due_date: values.dueDate,
-          weight: values.weight || 0,
-          points_possible: values.points || 0,
-          notes: values.notes,
-          status: values.status,
-        }),
-      });
+      const response = await fetch(
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId || task.courseId}/`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            task_name: values.title,
+            task_description: values.description,
+            due_date: values.dueDate,
+            weight: values.weight || 0,
+            points_possible: values.points || 0,
+            notes: values.notes,
+            status: values.status,
+          }),
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
@@ -116,7 +119,9 @@ export function TaskCreationForm({ courseId, isTypeEdit, task, onConfirm, quickE
       const accessToken = localStorage.getItem('accessToken');
 
       const response = await fetch(
-        `http://localhost:8000/tasks/${courseId || task.courseId}/${task.id}/`,
+        `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId || task.courseId}/${
+          task.id
+        }/`,
         {
           method: 'PUT',
           headers: {
