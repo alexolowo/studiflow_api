@@ -18,12 +18,16 @@ import numpy as np
 from langchain.prompts import ChatPromptTemplate
 from psycopg2.extras import RealDictCursor
 import cloudinary
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.chains import ConversationChain
+from langchain.schema import HumanMessage, AIMessage
+
 
 # Create your views here.
 load_dotenv()
 
 PROMPT_TEMPLATE = """
-You are a helpful assistant that for a college student. 
+You are a helpful assistant for a college student. 
 The user will ask you questions about the content of the uploaded resources.
 Provide the user with detailed and relevant information from the uploaded resources.
 You can also use your knowledge base to answer the user's questions, 
@@ -33,11 +37,14 @@ you must let them know that the response is generated directly from AI without s
 You are free to build on the response that is generated from the context, 
 but 90 percent of the response should be the response from the resources.
 Only 10 percent of the response should be your own knowledge.
+
+Context:
 {context}
 
----
+Chat History:
+{history}
 
-Answer the question based on the above context: {question}
+Answer this question based on the above context: {question}
 """
 
 cloudinary.config( 
@@ -174,26 +181,26 @@ class Chat(generics.GenericAPIView):
 
         chat_id = self.get_or_create_chat(user_email, course_id)
 
+        # Retrieve chat history
+        chat_history = self.get_chat_history(chat_id)
+        print("Chat history is", chat_history)
+        
         results = self.query_postgres(query_text, user_email, course_id, k=3)
+
         
         if len(results) == 0 or results[0][1] < 0.7:
-            # No matching results from the database
-            prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-            prompt = prompt_template.format(context="No specific context available.", question=query_text)
-
-            model = ChatOpenAI()
-            response_text = model.predict(prompt)
-
-            formatted_response = f"{response_text}\n\nNote: This response is generated directly from AI without specific references."
+            context = "No specific context available."
         else:
-            context_text = "\n\n---\n\n".join([content for content, _score in results])
-            prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-            prompt = prompt_template.format(context=context_text, question=query_text)
+            context = "\n\n---\n\n".join([content for content, _score in results])
 
-            model = ChatOpenAI()
-            response_text = model.predict(prompt)
+        prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+        prompt = prompt_template.format(context=context, question=query_text, history=chat_history)
 
-            formatted_response = f"{response_text}\n"
+        model = ChatOpenAI()
+
+        response_text = model.predict(prompt)
+
+        formatted_response = f"{response_text}\n"
 
         # Save the user's message and the bot's response
         self.save_message(chat_id, 'user', query_text)
@@ -201,6 +208,34 @@ class Chat(generics.GenericAPIView):
 
         return Response({"response": formatted_response}, status=status.HTTP_200_OK)
 
+    def get_chat_history(self, chat_id, k=3):  # k is the number of recent conversations to return
+        DATABASE_URL = os.environ['DATABASE_URL']
+        with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
+            with conn.cursor() as cur:
+                # Modify the SQL query to get only the most recent K * 2 messages
+                # (assuming each conversation has a user message and an AI response)
+                cur.execute("""
+                    SELECT sender, text 
+                    FROM (
+                        SELECT sender, text, timestamp,
+                            ROW_NUMBER() OVER (ORDER BY timestamp DESC) as row_num
+                        FROM messages 
+                        WHERE chat_id = %s
+                    ) sub
+                    WHERE row_num <= %s
+                    ORDER BY timestamp ASC
+                """, (chat_id, k * 2))
+                results = cur.fetchall()
+        
+        chat_history = []
+        for sender, text in results:
+            if sender == 'user':
+                chat_history.append(HumanMessage(content=text))
+            else:
+                chat_history.append(AIMessage(content=text))
+        
+        return chat_history
+    
     def get_or_create_chat(self, user_email, course_id):
         DATABASE_URL = os.environ['DATABASE_URL']
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
