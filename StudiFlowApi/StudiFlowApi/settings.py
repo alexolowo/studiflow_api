@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-h=%_^3yvsbe-w5e7uh=151tp16z(i&)-39@_^eol-r8y90d=+1
 DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'StudiFlowApi.urls'
@@ -96,6 +97,8 @@ WSGI_APPLICATION = 'StudiFlowApi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {}
+# if DEBUG:
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -105,6 +108,7 @@ DATABASES = {
         },
     }
 }
+# else:
 DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 
@@ -165,9 +169,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
