@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { FileUp, Send, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
-export default function ChatUI() {
-  const [messages, setMessages] = useState([]);
+export default function Chat({ messages, setMessages }) {
+  // const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [pdfFiles, setPdfFiles] = useState([]);
   const scrollAreaRef = useRef(null);
@@ -57,12 +57,6 @@ export default function ChatUI() {
 
   useEffect(() => {
     const fetchChatHistory = async () => {
-      console.log(
-        'Fetching chat history with an email of',
-        userEmail,
-        'and course identifier of',
-        courseIdentifier
-      );
       try {
         const response = await fetch('http://localhost:8000/chat/chat_history', {
           method: 'POST',
