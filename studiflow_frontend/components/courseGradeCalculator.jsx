@@ -128,7 +128,7 @@ export default function CourseGradeCalculator({ courseId }) {
         <h2 className="text-2xl font-bold text-gray-800">Course Grade Calculator</h2>
         <p className="text-gray-600 mt-2">Select tasks, input grades, and analyze your progress.</p>
         <Button onClick={handleConfirm} className="mt-8">
-          Confirm Selection's
+          Confirm Selection&apos;s
         </Button>
       </div>
       <div className="flex mt-6">
@@ -330,7 +330,7 @@ export default function CourseGradeCalculator({ courseId }) {
                 </div>
               </HoverCardTrigger>
               <HoverCardContent>
-                This represents the weight of tasks you've completed, as a percentage of the
+                This represents the weight of tasks you&apos;ve completed, as a percentage of the
                 assigned weight.
               </HoverCardContent>
             </HoverCard>
@@ -342,9 +342,9 @@ export default function CourseGradeCalculator({ courseId }) {
                 </div>
               </HoverCardTrigger>
               <HoverCardContent>
-                This is your current grade, adjusted for the weight of each task. It's calculated by
-                summing (grade / max grade * weight) for each task, then dividing by the total
-                weight of tasks with grades.
+                This is your current grade, adjusted for the weight of each task. It&apos;s
+                calculated by summing (grade / max grade * weight) for each task, then dividing by
+                the total weight of tasks with grades.
               </HoverCardContent>
             </HoverCard>
           </div>
