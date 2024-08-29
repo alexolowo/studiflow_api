@@ -16,18 +16,16 @@ class Course(models.Model):
         tasks: [id of tasks]
 
     """
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     course_code = models.CharField(max_length=255)
     name = models.CharField(max_length=200, null=False, default='Default Course Name')
     is_lecture = models.BooleanField(default=False)
     enrollment_term_id = models.IntegerField(blank=False, null=False)
     user = models.ManyToManyField('users.User', related_name='lecture_courses')
+    was_user_created = models.BooleanField(default=False)
     
-    
-    # syllabus = models.OneToOneField('Syllabus', on_delete=models.CASCADE, related_name='user_courses_syllabus')
-    #TODO: Add resources model one to many relationship
-    #TODO: Add Syllabus model one to one relationship
 
+    REQUIRED_FIELDS = ['course_code', 'name', 'is_lecture', 'enrollment_term_id', 'user']
     def __str__(self):
         return str(self.course_code)
 

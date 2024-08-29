@@ -1,16 +1,25 @@
+import os
 import requests
 import re
 from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from resources.models import Resource
+from tasks.models import Task
 from sections.models import Section
-
+import cloudinary
+import cloudinary.uploader
 from .models import Course
 from .serializers import CourseSerializer
 from rest_framework.permissions import IsAuthenticated
 
-
+cloudinary.config( 
+    cloud_name = os.environ['CLOUDINARY_CLOUD_NAME'], 
+    api_key = os.environ['CLOUDINARY_API_KEY'], 
+    api_secret = os.environ['CLOUDINARY_API_SECRET'],
+    secure=True
+)
 COURSE_CODE_PATTERN = r"[A-Z]{3,4}\d{3}[HY]\d"
 SECTION_PATTERN = r"(TUT|PRA|LAB|Tutorial|Practical|Laboratory)"
 
@@ -87,6 +96,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
                             name=course_name[colon_index+1:].strip() if colon_index != -1 else course_name.strip(),
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
+                            was_user_created=True,
                         )
                         course.save()
                         course.user.add(request.user)
@@ -176,3 +186,56 @@ class RetrieveUserCoursesView(generics.ListAPIView):
             status=status.HTTP_200_OK,
             data={"message": "User courses retrieved and saved successfully.", "courses": serialized_courses.data},
         )
+    
+
+class CreateCourseView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def post(self, request: Request, *args, **kwargs):
+        course = Course(
+            course_code=request.data["course_code"],
+            name=request.data["name"],
+            enrollment_term_id=request.data["enrollment_term_id"],
+            is_lecture=request.data["is_lecture"],
+            was_user_created=True,
+        )
+
+        try:
+            course.save()
+            course.user.add(request.user)
+            serializer = CourseSerializer(course)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class DeleteCourseView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def deleteCloudinaryResource(self, course_id, user_id):
+
+        resources = Resource.objects.filter(course_id=course_id, user_id=user_id)
+        for resource in resources:
+            public_id = resource.resource_link.split('/')[-1].split('.')[0]
+            cloudinary.uploader.destroy(public_id)
+            resource.delete()
+
+    def delete(self, request: Request, *args, **kwargs):
+        course_id = kwargs.get('pk')
+        try:
+            course = Course.objects.get(id=course_id, was_user_created=True, user=request.user)
+            if course.was_user_created:
+                # Delete associated tasks
+                Task.objects.filter(course_id=course_id, user=request.user).delete()
+                # Delete associated resources
+                self.deleteCloudinaryResource(course_id, request.user.id)
+                Resource.objects.filter(course_id=course_id, user=request.user).delete()
+                course.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)

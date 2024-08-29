@@ -17,13 +17,22 @@ from django.shortcuts import render, HttpResponse
 import numpy as np
 from langchain.prompts import ChatPromptTemplate
 from psycopg2.extras import RealDictCursor
+import cloudinary
 
 # Create your views here.
 load_dotenv()
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
-
+You are a helpful assistant that for a college student. 
+The user will ask you questions about the content of the uploaded resources.
+Provide the user with detailed and relevant information from the uploaded resources.
+You can also use your knowledge base to answer the user's questions, 
+but only if the user asks about a specific topic or question that is not covered in the resources.
+If the user asks about a specific topic or question that is not covered in the resources, 
+you must let them know that the response is generated directly from AI without specific references.
+You are free to build on the response that is generated from the context, 
+but 90 percent of the response should be the response from the resources.
+Only 10 percent of the response should be your own knowledge.
 {context}
 
 ---
@@ -31,10 +40,17 @@ Answer the question based only on the following context:
 Answer the question based on the above context: {question}
 """
 
+cloudinary.config( 
+    cloud_name = os.environ['CLOUDINARY_CLOUD_NAME'], 
+    api_key = os.environ['CLOUDINARY_API_KEY'], 
+    api_secret = os.environ['CLOUDINARY_API_SECRET'],
+    secure=True
+)
+
 class ResourceUpload(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         user_id = request.data.get('user_id')
-        course_id = request.data.get('course_id', 'CSC263')
+        course_id = request.data.get('course_id') 
         files = request.FILES.getlist('files')
 
         if not user_id or not files:
