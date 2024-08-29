@@ -329,8 +329,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
       {tasks && (
         <Accordion type="multiple" collapsible="true" className="w-full">
           {sortTasksByDueDate(tasks).map((task) => (
-            <div className="flex justify-between">
-              <AccordionItem key={task.id} value={task.id} className="flex-grow">
+            <div key={task.id} className="flex justify-between">
+              <AccordionItem value={task.id} className="flex-grow">
                 <AccordionTrigger>
                   <span className="text-2xl flex gap-8">
                     {`${task.title}`}

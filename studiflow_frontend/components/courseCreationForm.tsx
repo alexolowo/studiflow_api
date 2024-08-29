@@ -144,15 +144,17 @@ export function CourseCreationForm({ onConfirm }) {
               }
             };
 
-            React.useEffect(() => {
-              field.onChange(calculateEnrollmentTermId());
-            }, []);
-
             return (
               <FormItem>
                 <FormLabel>Enrollment Term ID</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} readOnly disabled />
+                  <Input
+                    type="number"
+                    {...field}
+                    readOnly
+                    disabled
+                    value={calculateEnrollmentTermId()}
+                  />
                 </FormControl>
                 <FormDescription>
                   Automatically calculated based on the current date.

@@ -221,7 +221,7 @@ export default function SignUpPage() {
                         and sign in with your UofT credentials.
                       </li>
                       <li className="pb-2 border-b border-gray-200">
-                        Scroll down to the "Approved Integrations" section and click the{' '}
+                        Scroll down to the &quot;Approved Integrations&quot; section and click the{' '}
                         <span className="font-semibold text-green-600">+ New Access Token</span>{' '}
                         button.
                       </li>
