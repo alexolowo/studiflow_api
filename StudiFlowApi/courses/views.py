@@ -1,3 +1,4 @@
+import os
 import requests
 import re
 from rest_framework import generics, status
@@ -7,12 +8,18 @@ from rest_framework.response import Response
 from resources.models import Resource
 from tasks.models import Task
 from sections.models import Section
-
+import cloudinary
+import cloudinary.uploader
 from .models import Course
 from .serializers import CourseSerializer
 from rest_framework.permissions import IsAuthenticated
 
-
+cloudinary.config( 
+    cloud_name = os.environ['CLOUDINARY_CLOUD_NAME'], 
+    api_key = os.environ['CLOUDINARY_API_KEY'], 
+    api_secret = os.environ['CLOUDINARY_API_SECRET'],
+    secure=True
+)
 COURSE_CODE_PATTERN = r"[A-Z]{3,4}\d{3}[HY]\d"
 SECTION_PATTERN = r"(TUT|PRA|LAB|Tutorial|Practical|Laboratory)"
 
@@ -208,6 +215,14 @@ class DeleteCourseView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CourseSerializer
 
+    def deleteCloudinaryResource(self, course_id, user_id):
+
+        resources = Resource.objects.filter(course_id=course_id, user_id=user_id)
+        for resource in resources:
+            public_id = resource.resource_link.split('/')[-1].split('.')[0]
+            cloudinary.uploader.destroy(public_id)
+            resource.delete()
+
     def delete(self, request: Request, *args, **kwargs):
         course_id = kwargs.get('pk')
         try:
@@ -216,6 +231,7 @@ class DeleteCourseView(generics.DestroyAPIView):
                 # Delete associated tasks
                 Task.objects.filter(course_id=course_id, user=request.user).delete()
                 # Delete associated resources
+                self.deleteCloudinaryResource(course_id, request.user.id)
                 Resource.objects.filter(course_id=course_id, user=request.user).delete()
                 course.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
