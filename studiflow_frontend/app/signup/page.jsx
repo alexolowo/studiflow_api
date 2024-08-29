@@ -50,7 +50,7 @@ export default function SignUpPage() {
     if (validateForm() && apiKey) {
       // The logic and shit to sign up.
       try {
-        const response = await fetch('http://localhost:8000/auth/signup/', {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/auth/signup/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -85,13 +85,16 @@ export default function SignUpPage() {
           console.log('signup data', data);
           // We must also hit the endpoint api/courses/load_courses/
 
-          const secondResponse = await fetch('http://localhost:8000/courses/load_courses/', {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${data.token.access}`,
-              'Content-Type': 'application/json',
-            },
-          });
+          const secondResponse = await fetch(
+            'https://studiflow-a4bd949e558f.herokuapp.com/courses/load_courses/',
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${data.token.access}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
           console.log(secondResponse);
           if (secondResponse.ok) {
             // router.push('/');

@@ -44,7 +44,7 @@ export function CourseCreationForm({ onConfirm }) {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch('http://localhost:8000/courses/create/', {
+      const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/courses/create/', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,

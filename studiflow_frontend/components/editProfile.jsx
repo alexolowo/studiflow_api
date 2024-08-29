@@ -44,7 +44,7 @@ export default function EditProfileForm({ initialData }) {
 
   const onSubmit = async (values) => {
     try {
-      const response = await fetch('http://localhost:8000/auth/editUser/', {
+      const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/auth/editUser/', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,

@@ -28,7 +28,7 @@ export default function Chat({ messages, setMessages }) {
     const fetchUserData = async () => {
       try {
         // Get the user data
-        const response = await fetch('http://localhost:8000/auth/login/', {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/auth/login/', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -58,17 +58,20 @@ export default function Chat({ messages, setMessages }) {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
-        const response = await fetch('http://localhost:8000/chat/chat_history', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-          body: JSON.stringify({
-            user_email: userEmail,
-            course_id: courseIdentifier,
-          }),
-        });
+        const response = await fetch(
+          'https://studiflow-a4bd949e558f.herokuapp.com/chat/chat_history',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+            body: JSON.stringify({
+              user_email: userEmail,
+              course_id: courseIdentifier,
+            }),
+          }
+        );
 
         console.log('Response status:', response.status);
 
@@ -154,7 +157,7 @@ export default function Chat({ messages, setMessages }) {
         formData.append('course_id', courseIdentifier);
         pdfFiles.forEach((file) => formData.append('files', file));
 
-        response = await fetch('http://localhost:8000/chat/upload', {
+        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/upload', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -162,7 +165,7 @@ export default function Chat({ messages, setMessages }) {
           body: formData,
         });
       } else {
-        response = await fetch('http://localhost:8000/chat/', {
+        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

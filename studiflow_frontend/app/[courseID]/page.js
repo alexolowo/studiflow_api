@@ -23,14 +23,13 @@ export default function CourseView() {
   const [userEmail, setUserEmail] = useState('');
   const [messages, setMessages] = useState([]);
 
-
   const courseIdentifier = params.courseID;
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         // Get the user data
-        const response = await fetch('http://localhost:8000/auth/login/', {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/auth/login/', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -52,18 +51,20 @@ export default function CourseView() {
     fetchUserData();
   }, []);
 
-
   useEffect(() => {
     async function getUsersCourseTasks() {
       try {
         const accessToken = localStorage.getItem('accessToken');
 
-        const response = await fetch(`http://localhost:8000/tasks/${courseId}/`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `https://studiflow-a4bd949e558f.herokuapp.com/tasks/${courseId}/`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         if (response.status === 401) {
           // Remove tokens and redirect to home page
@@ -101,7 +102,7 @@ export default function CourseView() {
       try {
         const accessToken = localStorage.getItem('accessToken');
 
-        const response = await fetch('http://localhost:8000/courses/', {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/courses/', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -138,11 +139,7 @@ export default function CourseView() {
   const renderContent = () => {
     switch (activeTab) {
       case 'chat':
-        return <Chat 
-        courseId={courseId} 
-        messages={messages} 
-        setMessages={setMessages} 
-      />;
+        return <Chat courseId={courseId} messages={messages} setMessages={setMessages} />;
       case 'tasks':
         return (
           <TaskList
@@ -164,21 +161,24 @@ export default function CourseView() {
   const printChat = async () => {
     if (!userEmail || !courseIdentifier) return;
 
-    console.log("user email is", userEmail);
-    console.log("course identifier is", courseIdentifier);
+    console.log('user email is', userEmail);
+    console.log('course identifier is', courseIdentifier);
 
     try {
-      const response = await fetch('http://localhost:8000/chat/chat_history', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({
-          user_email: userEmail,
-          course_id: courseIdentifier,
-        }),
-      });
+      const response = await fetch(
+        'https://studiflow-a4bd949e558f.herokuapp.com/chat/chat_history',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          body: JSON.stringify({
+            user_email: userEmail,
+            course_id: courseIdentifier,
+          }),
+        }
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch chat history');
       }
@@ -198,7 +198,7 @@ export default function CourseView() {
         const messageText = `${message.sender}: ${message.text}`;
         const lines = pdf.splitTextToSize(messageText, 180);
 
-        if (yOffset + (lines.length * 7) > 280) {
+        if (yOffset + lines.length * 7 > 280) {
           pdf.addPage();
           yOffset = 10;
         }
@@ -221,7 +221,6 @@ export default function CourseView() {
       link.download = 'chat_history.pdf';
       link.click();
       URL.revokeObjectURL(url);
-
     } catch (error) {
       console.error('Error printing chat:', error);
     }
@@ -231,17 +230,20 @@ export default function CourseView() {
     if (!userEmail || !courseIdentifier) return;
 
     try {
-      const response = await fetch('http://localhost:8000/chat/chat_history', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({
-          user_email: userEmail,
-          course_id: courseIdentifier,
-        }),
-      });
+      const response = await fetch(
+        'https://studiflow-a4bd949e558f.herokuapp.com/chat/chat_history',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          body: JSON.stringify({
+            user_email: userEmail,
+            course_id: courseIdentifier,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to clear chat history');
@@ -275,29 +277,41 @@ export default function CourseView() {
             <div className="flex space-x-4">
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out flex items-center"
-                onClick={printChat}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
+                onClick={printChat}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Print Chat
               </button>
               <button
                 className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center"
-                onClick={clearChat}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                onClick={clearChat}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Clear Chat
               </button>
             </div>
           )}
         </div>
-        <div className="bg-white shadow-md rounded-xl p-6">
-          {renderContent()}
-        </div>
+        <div className="bg-white shadow-md rounded-xl p-6">{renderContent()}</div>
       </main>
     </div>
-  )
+  );
 }

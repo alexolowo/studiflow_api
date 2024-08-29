@@ -37,7 +37,7 @@ export default function ListViewCourses() {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch('http://localhost:8000/courses/', {
+      const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/courses/', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -71,12 +71,15 @@ export default function ListViewCourses() {
     setIsImporting(true);
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/courses/load_courses/', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://studiflow-a4bd949e558f.herokuapp.com/courses/load_courses/',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.status === 401) {
         localStorage.removeItem('accessToken');

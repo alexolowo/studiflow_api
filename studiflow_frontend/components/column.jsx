@@ -31,7 +31,7 @@ export default function Column({
       try {
         const accessToken = localStorage.getItem('accessToken');
 
-        const response = await fetch('http://localhost:8000/courses/', {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/courses/', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${accessToken}`,
