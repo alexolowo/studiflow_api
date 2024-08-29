@@ -169,7 +169,47 @@ class ChatHistory(generics.GenericAPIView):
             print("Traceback:")
             print(traceback.format_exc())
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def delete(self, request: Request, *args, **kwargs):
+        print("ChatHistory delete endpoint hit")
+        print(f"Request data: {request.data}")
+
+        user_email = request.data.get('user_email')
+        course_id = request.data.get('course_id')
+
+        print(f"user_email: {user_email}, course_id: {course_id}")
+
+        if not user_email or not course_id:
+            print("Missing user_email or course_id")
+            return Response({"error": "user_email and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            DATABASE_URL = os.environ['DATABASE_URL']
             
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    print("Executing SQL delete query")
+                    cur.execute("""
+                        DELETE FROM messages
+                        WHERE chat_id IN (
+                            SELECT id FROM chats
+                            WHERE user_email = %s AND course_id = %s
+                        )
+                    """, (user_email, course_id))
+                    
+                    deleted_count = cur.rowcount
+                    conn.commit()
+
+            print(f"Deleted {deleted_count} messages")
+            return Response({"message": f"Successfully deleted {deleted_count} messages"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print(f"Exception occurred: {str(e)}")
+            import traceback
+            print("Traceback:")
+            print(traceback.format_exc())
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class Chat(generics.GenericAPIView):
     def post(self, request: Request, *args, **kwargs):
         query_text = request.data.get('query')
