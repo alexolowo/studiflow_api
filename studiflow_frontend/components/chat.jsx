@@ -106,7 +106,7 @@ export default function ChatUI() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      scrollAreaRef.current.scrollIntoView(false);
     }
   }, [messages]);
 
@@ -215,28 +215,32 @@ export default function ChatUI() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-grow p-8" ref={scrollAreaRef}>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div className="flex flex-col">
+      <ScrollArea className="flex-grow p-8">
+        <div className="flex flex-col h-full" ref={scrollAreaRef}>
+          {messages.map((message) => (
             <div
+              key={message.id}
               className={`flex ${
-                message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
-              } items-start max-w-[70%]`}>
-              <Avatar className="w-8 h-8">
-                <AvatarFallback>{message.sender === 'user' ? 'U' : 'B'}</AvatarFallback>
-              </Avatar>
+                message.sender === 'user' ? 'justify-end' : 'justify-start'
+              } mb-4`}>
               <div
-                className={`mx-2 ${
-                  message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                } ${message.isTyping ? '' : 'p-3 rounded-lg'}`}>
-                {message.isTyping ? <TypingIndicator /> : message.text}
+                className={`flex ${
+                  message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+                } items-start max-w-[70%]`}>
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback>{message.sender === 'user' ? 'U' : 'B'}</AvatarFallback>
+                </Avatar>
+                <div
+                  className={`mx-2 ${
+                    message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                  } ${message.isTyping ? '' : 'p-3 rounded-lg'}`}>
+                  {message.isTyping ? <TypingIndicator /> : message.text}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </ScrollArea>
       <div className="sticky bottom-8 w-[80%] p-10 py-4 bg-gray-200 rounded-xl shadow-lg z-50 ml-30 self-center">
         <form
