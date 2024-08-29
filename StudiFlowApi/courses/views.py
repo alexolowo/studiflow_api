@@ -4,6 +4,8 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from resources.models import Resource
+from tasks.models import Task
 from sections.models import Section
 
 from .models import Course
@@ -87,6 +89,7 @@ class LoadUserCoursesView(generics.GenericAPIView):
                             name=course_name[colon_index+1:].strip() if colon_index != -1 else course_name.strip(),
                             enrollment_term_id=course_data["enrollment_term_id"],
                             is_lecture=True,
+                            was_user_created=True,
                         )
                         course.save()
                         course.user.add(request.user)
@@ -176,3 +179,47 @@ class RetrieveUserCoursesView(generics.ListAPIView):
             status=status.HTTP_200_OK,
             data={"message": "User courses retrieved and saved successfully.", "courses": serialized_courses.data},
         )
+    
+
+class CreateCourseView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def post(self, request: Request, *args, **kwargs):
+        course = Course(
+            course_code=request.data["course_code"],
+            name=request.data["name"],
+            enrollment_term_id=request.data["enrollment_term_id"],
+            is_lecture=request.data["is_lecture"],
+            was_user_created=True,
+        )
+
+        try:
+            course.save()
+            course.user.add(request.user)
+            serializer = CourseSerializer(course)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            print(e)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class DeleteCourseView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CourseSerializer
+
+    def delete(self, request: Request, *args, **kwargs):
+        course_id = kwargs.get('pk')
+        try:
+            course = Course.objects.get(id=course_id, was_user_created=True, user=request.user)
+            if course.was_user_created:
+                # Delete associated tasks
+                Task.objects.filter(course_id=course_id, user=request.user).delete()
+                # Delete associated resources
+                Resource.objects.filter(course_id=course_id, user=request.user).delete()
+                course.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)

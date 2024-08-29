@@ -1,14 +1,13 @@
-"use client"
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import StepIndicator from '@/components/StepIndicator';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
@@ -28,12 +27,13 @@ export default function SignUpPage() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!username) newErrors.username = "Username is required";
-    if (!email) newErrors.email = "Email is required";
-    else if (!validateEmail(email)) newErrors.email = "Invalid email format";
-    if (!password) newErrors.password = "Password is required";
-    else if (password.length < 8) newErrors.password = "Password must be at least 8 characters long";
-    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!username) newErrors.username = 'Username is required';
+    if (!email) newErrors.email = 'Email is required';
+    else if (!validateEmail(email)) newErrors.email = 'Invalid email format';
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 8)
+      newErrors.password = 'Password must be at least 8 characters long';
+    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -74,29 +74,28 @@ export default function SignUpPage() {
         //   }
         // }
 
-        console.log("Signing up");
+        console.log('Signing up');
 
         if (response.ok) {
           const data = await response.json();
           localStorage.setItem('accessToken', data.token.access);
           localStorage.setItem('refreshToken', data.token.refresh);
           localStorage.setItem('username', data.user);
-          
-          console.log("signup data", data);
-          // We must also hit the endpoint api/courses/load_courses
 
-          const secondResponse = await fetch('http://localhost:8000/courses/load_courses', {
+          console.log('signup data', data);
+          // We must also hit the endpoint api/courses/load_courses/
+
+          const secondResponse = await fetch('http://localhost:8000/courses/load_courses/', {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${data.token.access}`,
-              'Content-Type': 'application/json'
-            }
+              Authorization: `Bearer ${data.token.access}`,
+              'Content-Type': 'application/json',
+            },
           });
           console.log(secondResponse);
           if (secondResponse.ok) {
             // router.push('/');
           }
-
         } else {
           const data = await response.json();
           console.log(data.message);
@@ -107,15 +106,15 @@ export default function SignUpPage() {
         console.error('Login error:', error);
       }
     } else {
-      setErrors(prev => ({ ...prev, apiKey: "API Key is required" }));
+      setErrors((prev) => ({ ...prev, apiKey: 'API Key is required' }));
     }
   };
 
   useEffect(() => {
     setTimeout(() => {
       setErrorMessage('');
-    }, 5000)
-  }, [errorMessage])
+    }, 5000);
+  }, [errorMessage]);
 
   return (
     <div className="flex h-screen">
@@ -131,7 +130,9 @@ export default function SignUpPage() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-center">Create Your Account</CardTitle>
+            <CardTitle className="text-2xl font-semibold text-center">
+              Create Your Account
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-6 text-center">
@@ -154,9 +155,11 @@ export default function SignUpPage() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
-                      className={errors.username ? "border-red-500" : ""}
+                      className={errors.username ? 'border-red-500' : ''}
                     />
-                    {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+                    {errors.username && (
+                      <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                    )}
                   </div>
                   <div>
                     <Input
@@ -165,7 +168,7 @@ export default function SignUpPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className={errors.email ? "border-red-500" : ""}
+                      className={errors.email ? 'border-red-500' : ''}
                     />
                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                   </div>
@@ -176,9 +179,11 @@ export default function SignUpPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className={errors.password ? "border-red-500" : ""}
+                      className={errors.password ? 'border-red-500' : ''}
                     />
-                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                    {errors.password && (
+                      <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                    )}
                   </div>
                   <div>
                     <Input
@@ -187,11 +192,16 @@ export default function SignUpPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className={errors.confirmPassword ? "border-red-500" : ""}
+                      className={errors.confirmPassword ? 'border-red-500' : ''}
                     />
-                    {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+                    {errors.confirmPassword && (
+                      <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                    )}
                   </div>
-                  <Button type="button" onClick={handleNextStep} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                  <Button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700">
                     Next
                   </Button>
                 </>
@@ -201,10 +211,19 @@ export default function SignUpPage() {
                     <h3 className="text-lg font-semibold mb-2">How to get your API Key:</h3>
                     <ol className="list-decimal list-inside space-y-4 text-gray-800 text-sm">
                       <li className="pb-2 border-b border-gray-200">
-                        Navigate to the <a href="https://utoronto.instructure.com/profile/settings" className="text-blue-600 hover:text-blue-800 underline" target="_blank">UofT Canvas Settings page</a> and sign in with your UofT credentials.
+                        Navigate to the{' '}
+                        <a
+                          href="https://utoronto.instructure.com/profile/settings"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                          target="_blank">
+                          UofT Canvas Settings page
+                        </a>{' '}
+                        and sign in with your UofT credentials.
                       </li>
                       <li className="pb-2 border-b border-gray-200">
-                        Scroll down to the "Approved Integrations" section and click the <span className="font-semibold text-green-600">+ New Access Token</span> button.
+                        Scroll down to the "Approved Integrations" section and click the{' '}
+                        <span className="font-semibold text-green-600">+ New Access Token</span>{' '}
+                        button.
                       </li>
                       <li className="pb-2 border-b border-gray-200">
                         In the form that appears:
@@ -213,11 +232,8 @@ export default function SignUpPage() {
                           <li>Select an appropriate expiration date</li>
                         </ul>
                       </li>
-                      <li>
-                        After generating the token, copy and paste it below.
-                      </li>
+                      <li>After generating the token, copy and paste it below.</li>
                     </ol>
-
                   </div>
                   <div>
                     <Input
@@ -225,7 +241,7 @@ export default function SignUpPage() {
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       required
-                      className={errors.apiKey ? "border-red-500" : ""}
+                      className={errors.apiKey ? 'border-red-500' : ''}
                     />
                     {errors.apiKey && <p className="text-red-500 text-xs mt-1">{errors.apiKey}</p>}
                   </div>
