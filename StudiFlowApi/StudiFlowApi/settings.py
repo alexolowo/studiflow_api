@@ -97,10 +97,10 @@ WSGI_APPLICATION = 'StudiFlowApi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {}
-if DEBUG:
-    DATABASES = {
-        "default": {
+# DATABASES = {}
+# if DEBUG:
+DATABASES = {
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "OPTIONS": {
             "service": "my_service",
@@ -108,8 +108,8 @@ if DEBUG:
         },
     }
 }
-else:
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+# else:
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 
 # Password validation
