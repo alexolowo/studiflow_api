@@ -115,7 +115,7 @@ export default function LoginPage() {
               </Button>
             </form>
             <div className="mt-4 text-center">
-              <Link href="/forgot-password" className="text-sm text-gray-600 hover:underline">
+              <Link href="https://studiflow-a4bd949e558f.herokuapp.com/auth/reset_password/" className="text-sm text-gray-600 hover:underline">
                 Forgot your password?
               </Link>
             </div>
