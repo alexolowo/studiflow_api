@@ -43,7 +43,7 @@ export default function Column({
           // Remove tokens and redirect to home page
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 
@@ -69,6 +69,14 @@ export default function Column({
     setTaskChange(false);
   }, [taskChange]);
 
+  const sortTasksByDueDate = (tasks) => {
+    return [...tasks].sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(b.dueDate) - new Date(a.dueDate);
+    });
+  };
+
   return (
     <Card className="flex-1 " onDragOver={onDragOver} onDrop={(e) => onDrop(e, status)}>
       <CardHeader>
@@ -80,7 +88,7 @@ export default function Column({
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        {tasks.map((task) => (
+        {sortTasksByDueDate(tasks).map((task) => (
           <Task
             key={task.id}
             task={task}

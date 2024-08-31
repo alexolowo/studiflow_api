@@ -56,7 +56,7 @@ export function CourseCreationForm({ onConfirm }) {
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 

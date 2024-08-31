@@ -40,7 +40,7 @@ const CourseCard = ({ course }) => {
         if (response.status === 401) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 
@@ -79,7 +79,7 @@ const CourseCard = ({ course }) => {
           // Remove tokens and redirect to home page
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 
@@ -120,7 +120,7 @@ const CourseCard = ({ course }) => {
         if (response.status === 401) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 

@@ -26,7 +26,7 @@ export default function KanbanView() {
         // Remove tokens and redirect to home page
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
@@ -66,7 +66,7 @@ export default function KanbanView() {
         // Remove tokens and redirect to home page
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
@@ -154,7 +154,7 @@ export default function KanbanView() {
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
@@ -179,8 +179,11 @@ export default function KanbanView() {
 
   return (
     <div className="p-6 min-h-screen">
-      <div className="mb-4 mx-12">
+      <div className="mb-4 mx-12 flex flex-col gap-2">
         <TaskFilterBar onFilter={handleApplyFilter} onClear={getUserTasks} />
+        <span className="text-sm text-gray-500 self-center">
+          By default, Tasks are sorted by due date. (Closest Due First)
+        </span>
       </div>
       <div className="flex space-x-4">
         {columns.map((column) => (
