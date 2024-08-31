@@ -20,10 +20,10 @@ export default function Banner() {
               deadlines, and improve your productivity.
             </p>
             <p className="text-sm mb-3">
-              With StudiFlow, you can easily import tasks from your school's learning management
-              system, create custom tasks, and track your progress across all your courses. Our
-              intuitive interface allows you to prioritize tasks, set reminders, and visualize your
-              workload using Kanban boards.
+              With StudiFlow, you can easily import tasks from your school&apos;s learning
+              management system, create custom tasks, and track your progress across all your
+              courses. Our intuitive interface allows you to prioritize tasks, set reminders, and
+              visualize your workload using Kanban boards.
             </p>
             <p className="text-sm">
               StudiFlow also features a powerful AI assistant that can help you break down complex
