@@ -42,7 +42,7 @@ export default function CourseGradeCalculator({ courseId }) {
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 

@@ -70,7 +70,7 @@ export default function CourseView() {
           // Remove tokens and redirect to home page
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 
@@ -114,7 +114,7 @@ export default function CourseView() {
           // Remove tokens and redirect to home page
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          router.push('/');
+          router.push('/login');
           return;
         }
 

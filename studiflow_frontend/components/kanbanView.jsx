@@ -26,7 +26,7 @@ export default function KanbanView() {
         // Remove tokens and redirect to home page
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
@@ -66,7 +66,7 @@ export default function KanbanView() {
         // Remove tokens and redirect to home page
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
@@ -154,7 +154,7 @@ export default function KanbanView() {
       if (response.status === 401) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 

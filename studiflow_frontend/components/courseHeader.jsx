@@ -31,7 +31,7 @@ export function CourseHeader({ currentCourse }) {
         // Remove tokens and redirect to home page
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        router.push('/');
+        router.push('/login');
         return;
       }
 
