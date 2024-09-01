@@ -69,7 +69,6 @@ export default function Chat({ messages, setMessages }) {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
             },
             body: JSON.stringify({
-              // user_email: userEmail,
               course_id: courseIdentifier.split('-')[0],
             }),
           }
@@ -90,16 +89,28 @@ export default function Chat({ messages, setMessages }) {
             .sort((a, b) => a.timestamp - b.timestamp);
 
           setMessages(sortedMessages);
+        } else {
+          // If there's no chat history, send the initial bot message
+          const initialMessage = {
+            id: 'initial',
+            sender: 'bot',
+            text: `Hello ${userName}, how can I help you today?`,
+            timestamp: new Date(),
+          };
+          setMessages([initialMessage]);
+
+          // Send this message to the backend to save in chat history
+          await sendMessageToBackend(initialMessage);
         }
       } catch (error) {
         console.error('Error fetching chat history:', error);
       }
     };
 
-    if (!userEmail || !courseIdentifier) return;
-
-    fetchChatHistory();
-  }, [userEmail, courseIdentifier]);
+    if (courseIdentifier && userName) {
+      fetchChatHistory();
+    }
+  }, [courseIdentifier, userName]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -204,6 +215,32 @@ export default function Chat({ messages, setMessages }) {
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const sendMessageToBackend = async (message) => {
+    try {
+      const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          query: message.text,
+          course_id: courseIdentifier.split('-')[0],
+          is_bot_message: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // We don't need to do anything with the response here
+      // as we've already added the message to the local state
+    } catch (error) {
+      console.error('Error sending message to backend:', error);
     }
   };
 
