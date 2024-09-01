@@ -43,7 +43,6 @@ export default function Chat({ messages, setMessages }) {
         }
 
         const userData = await response.json();
-        console.log('user data is', userData);
         setUserEmail(userData.email);
         setUserName(userData.user);
       } catch (error) {
@@ -55,7 +54,6 @@ export default function Chat({ messages, setMessages }) {
   }, [accessToken]);
 
   useEffect(() => {
-    console.log('Access token is set');
     setAccessToken(window.localStorage.getItem('accessToken') || '');
   }, []);
 
@@ -76,8 +74,6 @@ export default function Chat({ messages, setMessages }) {
             }),
           }
         );
-
-        console.log('Response status:', response.status);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -187,8 +183,6 @@ export default function Chat({ messages, setMessages }) {
       }
 
       const data = await response.json();
-      console.log('data received from backend is', data);
-      console.log('messages currently are', messages);
 
       const botResponse = {
         id: messages.length + 2,
@@ -196,7 +190,6 @@ export default function Chat({ messages, setMessages }) {
         text: data.response,
         timestamp: new Date(),
       };
-      console.log('bot message is', botResponse);
 
       setPdfFiles([]);
       setMessages((prevMessages) => [...prevMessages, botResponse]);
@@ -213,8 +206,6 @@ export default function Chat({ messages, setMessages }) {
       setIsLoading(false);
     }
   };
-
-  console.log('user name is', userName);
 
   return (
     <div className="flex flex-col">
@@ -235,7 +226,12 @@ export default function Chat({ messages, setMessages }) {
                     {message.sender === 'user' ? (
                       userName && userName.charAt(0).toUpperCase()
                     ) : (
-                      <Image src="/file.png" width={32} height={32} />
+                      <Image
+                        src="/file.png"
+                        width={32}
+                        height={32}
+                        alt="chatbot with studiflow logo"
+                      />
                     )}
                   </AvatarFallback>
                 </Avatar>

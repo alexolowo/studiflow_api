@@ -166,7 +166,7 @@ class ResourceDelete(generics.GenericAPIView):
                         WHERE course_id = %s
                         AND user_id = %s
                         AND source_file = %s
-                    """, (course_id, user_id, source_file))
+                    """, (str(course_id), str(user_id), source_file))
                     
                     deleted_count = cur.rowcount
                     conn.commit()
@@ -182,17 +182,19 @@ class ResourceDelete(generics.GenericAPIView):
         
         deleted_resources = []
         errors = []
+        print("resource ids are", resource_ids)
 
         for resource_id in resource_ids:
             try:
                 resource = Resource.objects.get(id=resource_id, user=user)
-                
+                print("resource is", resource)
                 # Extract public_id from the Cloudinary URL
                 public_id = resource.resource_link.split('/')[-1].split('.')[0]
                 
                 # Delete file from Cloudinary
                 try:
                     result = cloudinary.uploader.destroy(public_id)
+                    print("result is", result)
                     if result.get('result') == 'ok':
                         # If Cloudinary deletion is successful, delete the resource from the database
                         self.delete_embeddings(resource.course_id, user.id, resource.resource_name)
@@ -200,6 +202,7 @@ class ResourceDelete(generics.GenericAPIView):
                         deleted_resources.append(resource_id)
                     else:
                         errors.append(f"Failed to delete resource {resource_id} from Cloudinary")
+                        print("errors are", errors)
                 except Exception as e:
                     logger.error(f"Error deleting resource {resource_id} from Cloudinary: {str(e)}")
                     errors.append(f"Error deleting resource {resource_id} from Cloudinary")
