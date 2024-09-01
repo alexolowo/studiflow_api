@@ -21,15 +21,15 @@ export default function Banner() {
       </div>
       <div className="container mx-auto px-4">
         <p className="text-2xl mb-8">
-          StudiFlow is an innovative task management and study optimization platform designed
-          specifically for students. Our app helps you organize your coursework, manage deadlines,
-          and improve your productivity.
+          StudiFlow is task management and study optimization platform designed specifically for
+          students. Our app helps you organize your coursework, manage deadlines, and improve your
+          productivity.
         </p>
         <p className="text-2xl mb-8">
           With StudiFlow, you can easily import tasks from your school&apos;s learning management
-          system, create custom tasks, and track your progress across all your courses. Our
-          intuitive interface allows you to prioritize tasks, set reminders, and visualize your
-          workload using Kanban boards.
+          system, create custom tasks, and track your progress across all your courses. Note that we
+          are not affiliated with any school or learning management system. Currently, we only
+          support automation from Canvas LMS (UofT ONLY).
         </p>
         <p className="text-2xl">
           StudiFlow also features a powerful AI assistant that can help you break down complex
