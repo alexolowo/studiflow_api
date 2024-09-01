@@ -616,7 +616,7 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
           <DrawerHeader>
             <DrawerTitle>AI Response for: {currentTask?.title}</DrawerTitle>
             <DrawerDescription>
-              Here's what StudiFlow AI has to say about this task:
+              Here&apos;s what StudiFlow AI has to say about this task:
             </DrawerDescription>
           </DrawerHeader>
           <ScrollArea className="h-[60vh] p-6">
