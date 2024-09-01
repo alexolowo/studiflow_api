@@ -74,7 +74,7 @@ class ResourceUploadView(generics.CreateAPIView):
                 resource.delete()  
                 return Response({"error": f"Error processing file {file.name}: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response(uploaded_resources, status=status.HTTP_201_CREATED)
+        return Response({"response": "Files processed and stored successfully"}, status=status.HTTP_201_CREATED)
 
     def process_file(self, resource, secure_url):
         download_url = secure_url.replace('/upload/', '/upload/fl_attachment/')
@@ -136,7 +136,7 @@ class ResourceUploadView(generics.CreateAPIView):
                 
                 # TODO: update this to take id instead of username
                 execute_values(cur, 
-                               "INSERT INTO embeddings (user_name, course_id, content, embedding, source_file) VALUES %s",
+                               "INSERT INTO embeddings (user_id, course_id, content, embedding, source_file) VALUES %s",
                                data)
                 
                 conn.commit()
@@ -154,6 +154,27 @@ class ResourceList(generics.ListAPIView):
 
 class ResourceDelete(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+
+    def delete_embeddings(self, course_id, user_id, source_file):
+        DATABASE_URL = os.environ['DATABASE_URL']
+        
+        try:
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        DELETE FROM embeddings
+                        WHERE course_id = %s
+                        AND user_id = %s
+                        AND source_file = %s
+                    """, (course_id, user_id, source_file))
+                    
+                    deleted_count = cur.rowcount
+                    conn.commit()
+            
+            return deleted_count
+        except Exception as e:
+            logger.error(f"Error deleting embeddings: {str(e)}")
+            raise
 
     def post(self, request):
         user = request.user
@@ -174,6 +195,7 @@ class ResourceDelete(generics.GenericAPIView):
                     result = cloudinary.uploader.destroy(public_id)
                     if result.get('result') == 'ok':
                         # If Cloudinary deletion is successful, delete the resource from the database
+                        self.delete_embeddings(resource.course_id, user.id, resource.resource_name)
                         resource.delete()
                         deleted_resources.append(resource_id)
                     else:

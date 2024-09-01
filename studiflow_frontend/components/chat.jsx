@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { FileUp, Send, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 
 export default function Chat({ messages, setMessages }) {
   // const [messages, setMessages] = useState([]);
@@ -16,6 +18,7 @@ export default function Chat({ messages, setMessages }) {
   const scrollAreaRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
   const [accessToken, setAccessToken] = useState('');
 
@@ -42,6 +45,7 @@ export default function Chat({ messages, setMessages }) {
         const userData = await response.json();
         console.log('user data is', userData);
         setUserEmail(userData.email);
+        setUserName(userData.user);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -68,7 +72,7 @@ export default function Chat({ messages, setMessages }) {
             },
             body: JSON.stringify({
               // user_email: userEmail,
-              course_id: courseIdentifier,
+              course_id: courseIdentifier.split('-')[0],
             }),
           }
         );
@@ -153,7 +157,7 @@ export default function Chat({ messages, setMessages }) {
 
       if (pdfFiles.length > 0) {
         const formData = new FormData();
-        formData.append('course_id', courseIdentifier);
+        formData.append('course_id', courseIdentifier.split('-')[0]);
         pdfFiles.forEach((file) => formData.append('files', file));
 
         response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/resources/upload/', {
@@ -173,7 +177,7 @@ export default function Chat({ messages, setMessages }) {
           body: JSON.stringify({
             query: inputMessage,
             // user_email: userEmail,
-            course_id: courseIdentifier,
+            course_id: courseIdentifier.split('-')[0],
           }),
         });
       }
@@ -210,6 +214,8 @@ export default function Chat({ messages, setMessages }) {
     }
   };
 
+  console.log('user name is', userName);
+
   return (
     <div className="flex flex-col">
       <ScrollArea className="flex-grow p-8">
@@ -225,13 +231,23 @@ export default function Chat({ messages, setMessages }) {
                   message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
                 } items-start max-w-[70%]`}>
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>{message.sender === 'user' ? 'U' : 'B'}</AvatarFallback>
+                  <AvatarFallback>
+                    {message.sender === 'user' ? (
+                      userName && userName.charAt(0).toUpperCase()
+                    ) : (
+                      <Image src="/file.png" width={32} height={32} />
+                    )}
+                  </AvatarFallback>
                 </Avatar>
                 <div
                   className={`mx-2 ${
                     message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
                   } ${message.isTyping ? '' : 'p-3 rounded-lg'}`}>
-                  {message.isTyping ? <TypingIndicator /> : message.text}
+                  {message.isTyping ? (
+                    <TypingIndicator />
+                  ) : (
+                    <ReactMarkdown className="markdown-content">{message.text}</ReactMarkdown>
+                  )}
                 </div>
               </div>
             </div>
