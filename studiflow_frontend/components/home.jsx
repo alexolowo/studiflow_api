@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { FaBell } from 'react-icons/fa';
 import ListView from '@/components/listView';
 import KanbanView from './kanbanView';
 
@@ -14,8 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CourseHeader } from '@/components/courseHeader';
