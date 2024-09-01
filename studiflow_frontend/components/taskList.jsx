@@ -377,7 +377,18 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
         <TaskFilterBar onClear={handleClearFilter} onFilter={handleApplyFilter} />
         <p className="text-sm text-gray-500 mt-2">Tasks are sorted by due date by default</p>
       </div>
-      {tasks && (
+      {tasks && tasks.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-lg text-gray-600 mb-4">
+            No tasks found. Click the plus button to create a new task or the import button to
+            import tasks from Canvas.
+          </p>
+          <p className="text-sm text-gray-500">
+            To import tasks, make sure you've set your Canvas token. You can do this by clicking the
+            profile avatar on the top left of the home screen.
+          </p>
+        </div>
+      ) : (
         <Accordion type="multiple" collapsible="true" className="w-full">
           {sortTasksByDueDate(tasks).map((task) => (
             <div key={task.id} className="flex justify-between">
