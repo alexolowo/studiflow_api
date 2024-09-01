@@ -11,6 +11,9 @@ class CustomUserManager(BaseUserManager):
         user = self.model(email=email, **extra_fields)
 
         user.set_password(password)
+        # Ensure new users don't have admin permissions
+        user.is_staff = False
+        user.is_superuser = False
         user.save()
         
         # permission = Permission.objects.get(name='Can view user')

@@ -194,8 +194,6 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
 
       const data = await response.json();
       const parsedResults = data.map((task) => mapBackendFieldsToFrontendTask(task));
-      console.log('parsedResults', parsedResults);
-      console.log('parsedResults', response.url);
       parsedResults && onImport(parsedResults);
       toast({
         title: 'Tasks Filtered',
@@ -613,15 +611,16 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
         </HoverCardContent>
       </HoverCard>
 
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent>
+      <Drawer direction="right" open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        {/* <DrawerContent className="max-w-lg h-full right-0 pl-[-1000px]"> */}
+        <DrawerContent className="fixed ml-auto max-w-lg h-[100vh] w-[50vw]">
           <DrawerHeader>
             <DrawerTitle>AI Response for: {currentTask?.title}</DrawerTitle>
             <DrawerDescription>
               Here&apos;s what StudiFlow AI has to say about this task:
             </DrawerDescription>
           </DrawerHeader>
-          <ScrollArea className="h-[60vh] p-6">
+          <ScrollArea className="h-[80vh] px-6 bg-gray-100 border border-gray-400 rounded-xl">
             {isLoading ? (
               <div className="flex justify-center items-center h-full">
                 <Loader2 className="h-8 w-8 animate-spin" />
