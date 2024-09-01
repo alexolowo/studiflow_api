@@ -88,7 +88,7 @@ export default function SignUpPage() {
           localStorage.setItem('accessToken', data.token.access);
           localStorage.setItem('refreshToken', data.token.refresh);
           localStorage.setItem('username', data.user);
-          router.push('/home');
+          router.push('/');
           console.log('signup data', data);
           // We must also hit the endpoint api/courses/load_courses/
 
