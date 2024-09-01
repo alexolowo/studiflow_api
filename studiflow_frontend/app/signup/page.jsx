@@ -97,12 +97,14 @@ export default function SignUpPage() {
           );
           console.log(secondResponse);
           if (secondResponse.ok) {
-            // router.push('/');
+            router.push('/home');
           }
         } else {
           const data = await response.json();
-          console.log(data.message);
-          setErrorMessage('Sign up failed. Please check your credentials.');
+          // console.log(data.message);
+          setErrorMessage(
+            'Sign up failed. Please check your credentials. Email may already be in use.'
+          );
         }
       } catch (error) {
         setErrorMessage('An error occurred. Please try again.');
