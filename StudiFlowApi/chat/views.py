@@ -146,7 +146,7 @@ class ChatHistory(generics.GenericAPIView):
                         JOIN chats c ON m.chat_id = c.id
                         WHERE c.user_id = %s AND c.course_id = %s
                         ORDER BY m.timestamp ASC
-                    """, (user.id, course_id))
+                    """, (str(user.id), course_id))
                     
                     print("Fetching results")
                     results = cur.fetchall()
@@ -197,7 +197,7 @@ class ChatHistory(generics.GenericAPIView):
                             SELECT id FROM chats
                             WHERE user_id = %s AND course_id = %s
                         )
-                    """, (user.id, course_id))
+                    """, (str(user.id), course_id))
                     
                     deleted_count = cur.rowcount
                     conn.commit()
@@ -283,7 +283,8 @@ class Chat(generics.GenericAPIView):
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
             with conn.cursor() as cur:
                 # Check if chat exists
-                cur.execute("SELECT id FROM chats WHERE user_id = %s AND course_id = %s", (user_id, course_id))
+                print("Checking if chat exists", str(user_id), course_id)
+                cur.execute("SELECT id FROM chats WHERE user_id = %s AND course_id = %s", (str(user_id), course_id))
                 result = cur.fetchone()
                 
                 if result:
@@ -311,7 +312,7 @@ class Chat(generics.GenericAPIView):
                     SELECT content, embedding 
                     FROM embeddings 
                     WHERE user_id = %s AND course_id = %s
-                """, (user_id, course_id))
+                """, (str(user_id), course_id))
                 results = cur.fetchall()
 
         similarities = [(content, self.cosine_similarity(np.array(query_embedding), self.string_to_array(embedding)))

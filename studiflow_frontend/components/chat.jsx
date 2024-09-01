@@ -189,7 +189,7 @@ export default function Chat({ messages, setMessages }) {
       const botResponse = {
         id: messages.length + 2,
         sender: 'bot',
-        text: 'Files uploaded successfully',
+        text: data.response,
         timestamp: new Date(),
       };
       console.log('bot message is', botResponse);
