@@ -437,7 +437,9 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
                 </AccordionContent>
 
                 {task.description && (
-                  <AccordionContent>{`Description: ${task.description}`}</AccordionContent>
+                  <AccordionContent>
+                    <ReactMarkdown>{`Description: ${task.description}`}</ReactMarkdown>
+                  </AccordionContent>
                 )}
 
                 <AccordionContent>
