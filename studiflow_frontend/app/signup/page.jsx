@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import StepIndicator from '@/components/StepIndicator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
@@ -19,6 +21,7 @@ export default function SignUpPage() {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
+  const { toast } = useToast();
 
   const validateEmail = (email) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -42,6 +45,10 @@ export default function SignUpPage() {
     if (validateForm()) {
       setStep(2);
     }
+  };
+
+  const handlePreviousStep = () => {
+    setStep(1);
   };
 
   const handleSignUp = async (e) => {
@@ -81,7 +88,7 @@ export default function SignUpPage() {
           localStorage.setItem('accessToken', data.token.access);
           localStorage.setItem('refreshToken', data.token.refresh);
           localStorage.setItem('username', data.user);
-
+          router.push('/home');
           console.log('signup data', data);
           // We must also hit the endpoint api/courses/load_courses/
 
@@ -97,7 +104,17 @@ export default function SignUpPage() {
           );
           console.log(secondResponse);
           if (secondResponse.ok) {
-            router.push('/home');
+            toast({
+              title: 'Courses imported',
+              description: 'Courses have been imported successfully',
+            });
+          } else {
+            toast({
+              title: 'Error importing courses',
+              description:
+                'An error occurred while importing courses. Canvas token may be invalid.',
+              variant: 'destructive',
+            });
           }
         } else {
           const data = await response.json();
@@ -250,15 +267,24 @@ export default function SignUpPage() {
                     />
                     {errors.apiKey && <p className="text-red-500 text-xs mt-1">{errors.apiKey}</p>}
                   </div>
-                  <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
-                    Create Account
-                  </Button>
+                  <div className="flex space-x-4">
+                    <Button
+                      type="button"
+                      onClick={handlePreviousStep}
+                      className="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800">
+                      Previous
+                    </Button>
+                    <Button type="submit" className="w-1/2 bg-emerald-600 hover:bg-emerald-700">
+                      Create Account
+                    </Button>
+                  </div>
                 </>
               )}
             </form>
           </CardContent>
         </Card>
       </div>
+      <Toaster />
     </div>
   );
 }

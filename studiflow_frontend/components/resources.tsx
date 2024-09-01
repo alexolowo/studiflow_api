@@ -214,26 +214,37 @@ const Resources: React.FC = ({ courseId }: { courseId: number }) => {
           </div>
         )}
       </div>
-      <ScrollArea className="h-full rounded-md p-4">
-        <ul className="space-y-4 mx-8">
-          {resources.map((resource) => (
-            <li
-              key={resource.id}
-              className={cn(
-                'flex items-center text-xl space-x-2 p-2 rounded-md transition-all duration-200 ease-in-out',
-                'hover:bg-gray-100 hover:scale-105 cursor-pointer'
-              )}>
-              <Checkbox
-                checked={selectedResources.includes(resource.id)}
-                onCheckedChange={() => handleResourceSelect(resource.id)}
-              />
-              <span onClick={() => handleResourceClick(resource)} className="hover:underline">
-                {resource.resource_name}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </ScrollArea>
+      {resources.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-lg text-gray-600 mb-4">
+            Upload resources to Studiflow and improve your Assistant&apos;s knowledge.
+          </p>
+          <p className="text-sm text-gray-500">
+            Use the file upload above to add resources to this course.
+          </p>
+        </div>
+      ) : (
+        <ScrollArea className="h-full rounded-md p-4">
+          <ul className="space-y-4 mx-8">
+            {resources.map((resource) => (
+              <li
+                key={resource.id}
+                className={cn(
+                  'flex items-center text-xl space-x-2 p-2 rounded-md transition-all duration-200 ease-in-out',
+                  'hover:bg-gray-100 hover:scale-105 cursor-pointer'
+                )}>
+                <Checkbox
+                  checked={selectedResources.includes(resource.id)}
+                  onCheckedChange={() => handleResourceSelect(resource.id)}
+                />
+                <span onClick={() => handleResourceClick(resource)} className="hover:underline">
+                  {resource.resource_name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </ScrollArea>
+      )}
 
       <Dialog open={!!dialogResourceLink} onOpenChange={() => setDialogResourceLink(null)}>
         <DialogContent className="max-w-4xl">

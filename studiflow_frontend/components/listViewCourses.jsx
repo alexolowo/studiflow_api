@@ -118,9 +118,21 @@ export default function ListViewCourses() {
 
   return (
     <div className="grid grid-cols-2 gap-4 w-full h-fit">
-      {data.map((course, index) => (
-        <CourseCard key={index} course={course} />
-      ))}
+      {data.length === 0 ? (
+        <div className="col-span-2 text-center py-10">
+          <p className="text-lg text-gray-600 mb-4">
+            No courses found. Click the plus button to create a new course or the import button to
+            import courses from Canvas.
+          </p>
+          <p className="text-sm text-gray-500">
+            To import courses, make sure you&apos;ve set your Canvas token. You can do this by
+            clicking the profile avatar on the top right of the screen.
+          </p>
+        </div>
+      ) : (
+        data.map((course, index) => <CourseCard key={index} course={course} />)
+      )}
+
       <HoverCard>
         <HoverCardTrigger asChild>
           <Button
