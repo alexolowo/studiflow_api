@@ -27,14 +27,21 @@ export default function Home({ logout }) {
   useEffect(() => {
     const fetchData = async () => {
       const accessToken = localStorage.getItem('accessToken');
-      setUsername(localStorage.getItem('username'));
+      try {
+        const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/auth/login/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-      console.log('token in local storage', accessToken);
-
-      if (!accessToken) {
-        setError('No token found');
-
-        return;
+        if (response.ok) {
+          const data = await response.json();
+          setUsername(data.user);
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
       }
 
       // try {
@@ -66,13 +73,19 @@ export default function Home({ logout }) {
   const navigateToProfile = () => {
     router.push('/profile');
   };
+  console.log('username', username);
+  console.log('username', localStorage.getItem('username'));
 
   return (
     <>
       <div className="flex justify-between items-center py-4 px-8 bg-white shadow-md">
         <div className="flex items-center space-x-2">
           <Image src={StudiFlowLogo} alt="StudiFlow Logo" width={85} height={85} />
-          <span className="text-xl font-semibold text-gray-800">Hi {username}!</span>
+          {username === '' || username === undefined ? (
+            <span className="text-xl font-semibold text-gray-800">Hi there!</span>
+          ) : (
+            <span className="text-xl font-semibold text-gray-800">Hi {username}!</span>
+          )}
         </div>
         <div>
           <CourseHeader />
