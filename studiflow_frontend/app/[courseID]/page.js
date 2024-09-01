@@ -10,10 +10,23 @@ import Resources from '@/components/resources';
 import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
 import { CourseHeader } from '@/components/courseHeader';
 import jsPDF from 'jspdf';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 export default function CourseView() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const courseId = params.courseID.split('-')[0];
   const courseCode = params.courseID.split('-')[1];
   const [tasks, setTasks] = useState([]);
@@ -251,10 +264,20 @@ export default function CourseView() {
 
       const result = await response.json();
       console.log(result.message); // Log the success message
+      toast({
+        title: 'Chat cleared',
+        description: result.message,
+        // variant: 'destructive',
+      });
 
       // Clear the messages in the state
       setMessages([]);
     } catch (error) {
+      toast({
+        title: 'Error clearing chat',
+        description: error.message,
+        variant: 'destructive',
+      });
       console.error('Error clearing chat:', error);
       // Handle the error (e.g., show an error message to the user)
     }
@@ -291,9 +314,7 @@ export default function CourseView() {
                 </svg>
                 Print Chat
               </button>
-              <button
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center"
-                onClick={clearChat}>
+              <button className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 mr-2"
@@ -305,13 +326,40 @@ export default function CourseView() {
                     clipRule="evenodd"
                   />
                 </svg>
-                Clear Chat
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center">
+                      Clear Chat
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to clear the chat?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. You may want to print the chat first.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        className="bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out flex items-center"
+                        onClick={printChat}>
+                        Print Chat
+                      </Button>
+                      <Button variant="destructive" onClick={clearChat}>
+                        Clear Chat
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </button>
             </div>
           )}
         </div>
         <div className="bg-white shadow-md rounded-xl p-6">{renderContent()}</div>
       </main>
+      <Toaster />
     </div>
   );
 }

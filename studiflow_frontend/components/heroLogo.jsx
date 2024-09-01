@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import StudiFlowLogo from '@/public/studiflowLogo.png';
+import StudiFlowLogo from '@/public/file.png';
 
 const HeroLogo = () => {
   return (

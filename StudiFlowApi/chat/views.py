@@ -27,16 +27,16 @@ from langchain.schema import HumanMessage, AIMessage
 load_dotenv()
 
 PROMPT_TEMPLATE = """
-You are a helpful assistant for a college student. 
-The user will ask you questions about the content of the uploaded resources.
-Provide the user with detailed and relevant information from the uploaded resources.
-You can also use your knowledge base to answer the user's questions, 
-but only if the user asks about a specific topic or question that is not covered in the resources.
-If the user asks about a specific topic or question that is not covered in the resources, 
-you must let them know that the response is generated directly from AI without specific references.
-You are free to build on the response that is generated from the context, 
-but 90 percent of the response should be the response from the resources.
-Only 10 percent of the response should be your own knowledge.
+You are a friendly and knowledgeable AI tutor for a college student. Your goal is to provide helpful, detailed, and conversational responses based on the uploaded resources and your general knowledge.
+
+Guidelines:
+1. Use the provided context as your primary source of information (aim for 90% of your response).
+2. Supplement with your general knowledge when appropriate (up to 10% of your response).
+3. If the question isn't covered in the resources, clearly state that your answer is based on AI knowledge without specific references.
+4. Maintain a warm, engaging tone throughout the conversation.
+5. Provide detailed explanations, examples, and analogies to enhance understanding.
+6. Ask follow-up questions if clarification is needed.
+7. Encourage critical thinking by posing thought-provoking questions related to the topic.
 
 Context:
 {context}
@@ -44,7 +44,9 @@ Context:
 Chat History:
 {history}
 
-Answer this question based on the above context: {question}
+Student's Question: {question}
+
+Please provide a friendly, detailed, and conversational response:
 """
 
 cloudinary.config( 
@@ -56,7 +58,7 @@ cloudinary.config(
 
 class ResourceUpload(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
-        user_id = request.data.get('user_id')
+        user_id = request.user.id
         course_id = request.data.get('course_id') 
         files = request.FILES.getlist('files')
 
@@ -111,7 +113,7 @@ class ResourceUpload(generics.GenericAPIView):
                     data.append((user_id, course_id, chunk.page_content, embedding, file_name))
                 
                 execute_values(cur, 
-                               "INSERT INTO embeddings (user_name, course_id, content, embedding, source_file) VALUES %s",
+                               "INSERT INTO embeddings (user_id, course_id, content, embedding, source_file) VALUES %s",
                                data)
                 
                 conn.commit()
@@ -123,14 +125,14 @@ class ChatHistory(generics.GenericAPIView):
         print("ChatHistory endpoint hit")
         print(f"Request data: {request.data}")
 
-        user_email = request.data.get('user_email')
+        user = request.user
         course_id = request.data.get('course_id')
 
-        print(f"user_email: {user_email}, course_id: {course_id}")
+        print(f"user_id: {user.id}, course_id: {course_id}")
 
-        if not user_email or not course_id:
-            print("Missing user_email or course_id")
-            return Response({"error": "user_email and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not user or not course_id:
+            print("Missing user or course_id")
+            return Response({"error": "userID and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             DATABASE_URL = os.environ['DATABASE_URL']
@@ -142,9 +144,9 @@ class ChatHistory(generics.GenericAPIView):
                         SELECT m.id, m.sender, m.text, m.timestamp
                         FROM messages m
                         JOIN chats c ON m.chat_id = c.id
-                        WHERE c.user_email = %s AND c.course_id = %s
+                        WHERE c.user_id = %s AND c.course_id = %s
                         ORDER BY m.timestamp ASC
-                    """, (user_email, course_id))
+                    """, (str(user.id), course_id))
                     
                     print("Fetching results")
                     results = cur.fetchall()
@@ -174,14 +176,14 @@ class ChatHistory(generics.GenericAPIView):
         print("ChatHistory delete endpoint hit")
         print(f"Request data: {request.data}")
 
-        user_email = request.data.get('user_email')
+        user = request.user
         course_id = request.data.get('course_id')
 
-        print(f"user_email: {user_email}, course_id: {course_id}")
+        print(f"user: {user}, course_id: {course_id}")
 
-        if not user_email or not course_id:
-            print("Missing user_email or course_id")
-            return Response({"error": "user_email and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not user or not course_id:
+            print("Missing user or course_id")
+            return Response({"error": "userID and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             DATABASE_URL = os.environ['DATABASE_URL']
@@ -193,9 +195,9 @@ class ChatHistory(generics.GenericAPIView):
                         DELETE FROM messages
                         WHERE chat_id IN (
                             SELECT id FROM chats
-                            WHERE user_email = %s AND course_id = %s
+                            WHERE user_id = %s AND course_id = %s
                         )
-                    """, (user_email, course_id))
+                    """, (str(user.id), course_id))
                     
                     deleted_count = cur.rowcount
                     conn.commit()
@@ -213,19 +215,19 @@ class ChatHistory(generics.GenericAPIView):
 class Chat(generics.GenericAPIView):
     def post(self, request: Request, *args, **kwargs):
         query_text = request.data.get('query')
-        user_email = request.data.get('user_email')
+        user = request.user
         course_id = request.data.get('course_id')
         
-        if not query_text or not user_email or not course_id:
-            return Response({"error": "Query, user_email, and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not query_text or not user or not course_id:
+            return Response({"error": "Query, userID, and course_id are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        chat_id = self.get_or_create_chat(user_email, course_id)
+        chat_id = self.get_or_create_chat(user.id, course_id)
 
         # Retrieve chat history
         chat_history = self.get_chat_history(chat_id)
         print("Chat history is", chat_history)
         
-        results = self.query_postgres(query_text, user_email, course_id, k=3)
+        results = self.query_postgres(query_text, user.id, course_id, k=3)
 
         
         if len(results) == 0 or results[0][1] < 0.7:
@@ -276,18 +278,19 @@ class Chat(generics.GenericAPIView):
         
         return chat_history
     
-    def get_or_create_chat(self, user_email, course_id):
+    def get_or_create_chat(self, user_id, course_id):
         DATABASE_URL = os.environ['DATABASE_URL']
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
             with conn.cursor() as cur:
                 # Check if chat exists
-                cur.execute("SELECT id FROM chats WHERE user_email = %s AND course_id = %s", (user_email, course_id))
+                print("Checking if chat exists", str(user_id), course_id)
+                cur.execute("SELECT id FROM chats WHERE user_id = %s AND course_id = %s", (str(user_id), course_id))
                 result = cur.fetchone()
                 
                 if result:
                     return result[0]
                 else:
-                    cur.execute("INSERT INTO chats (user_email, course_id) VALUES (%s, %s) RETURNING id", (user_email, course_id))
+                    cur.execute("INSERT INTO chats (user_id, course_id) VALUES (%s, %s) RETURNING id", (user_id, course_id))
                     conn.commit()
                     return cur.fetchone()[0]
 
@@ -298,7 +301,7 @@ class Chat(generics.GenericAPIView):
                 cur.execute("INSERT INTO messages (chat_id, sender, text) VALUES (%s, %s, %s)", (chat_id, sender, text))
                 conn.commit()
 
-    def query_postgres(self, query_text, user_email, course_id, k=3):
+    def query_postgres(self, query_text, user_id, course_id, k=3):
         embeddings = OpenAIEmbeddings()
         query_embedding = embeddings.embed_query(query_text)
         DATABASE_URL = os.environ['DATABASE_URL']
@@ -308,8 +311,8 @@ class Chat(generics.GenericAPIView):
                 cur.execute("""
                     SELECT content, embedding 
                     FROM embeddings 
-                    WHERE user_name = %s AND course_id = %s
-                """, (user_email, course_id))
+                    WHERE user_id = %s AND course_id = %s
+                """, (str(user_id), course_id))
                 results = cur.fetchall()
 
         similarities = [(content, self.cosine_similarity(np.array(query_embedding), self.string_to_array(embedding)))

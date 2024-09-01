@@ -125,12 +125,16 @@ export default function CourseGradeCalculator({ courseId }) {
     setTasksToDelete([]);
   };
 
+  const handleDeselectAllTasksToDelete = () => {
+    setTasksToDelete([]);
+  };
+
   return (
     <>
       <div className="w-full p-4 mb-2">
         <h2 className="text-2xl font-bold text-gray-800">Course Grade Calculator</h2>
         <p className="text-gray-600 mt-2">Select tasks, input grades, and analyze your progress.</p>
-        <Button onClick={handleConfirm} className="mt-8">
+        <Button disabled={selectedTasks.length === 0} onClick={handleConfirm} className="mt-4">
           Confirm Selection&apos;s
         </Button>
       </div>
@@ -192,10 +196,19 @@ export default function CourseGradeCalculator({ courseId }) {
             </div>
           ))}
           <div className="mt-4 flex space-x-4">
-            <Button onClick={calculateProgress}>Analyze</Button>
-            <Button onClick={handleSelectAllTasksToDelete}>
-              {tasksToDelete.length === confirmedTasks.length ? 'Deselect All' : 'Select All'}
+            <Button
+              onClick={calculateProgress}
+              disabled={confirmedTasks.length === 0}
+              className="bg-green-500 text-white ">
+              Analyze
             </Button>
+            {tasksToDelete.length === 0 ? (
+              <Button disabled={confirmedTasks.length === 0} onClick={handleSelectAllTasksToDelete}>
+                Select All
+              </Button>
+            ) : (
+              <Button onClick={handleDeselectAllTasksToDelete}>Deselect All</Button>
+            )}
             <Button onClick={handleDeleteSelectedTasks} disabled={tasksToDelete.length === 0}>
               Delete Selected
             </Button>
@@ -351,6 +364,18 @@ export default function CourseGradeCalculator({ courseId }) {
               </HoverCardContent>
             </HoverCard>
           </div>
+          <Button
+            className="bg-yellow-500 text-white mt-4"
+            onClick={() => {
+              setProgress({
+                current: 0,
+                completed: 0,
+                assignedWeight: 0,
+                completedWeight: 0,
+              });
+            }}>
+            Clear Calculation
+          </Button>
         </div>
       </div>
     </>

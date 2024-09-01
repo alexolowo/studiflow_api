@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { FileUp, Send, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 
 export default function Chat({ messages, setMessages }) {
   // const [messages, setMessages] = useState([]);
@@ -16,6 +18,7 @@ export default function Chat({ messages, setMessages }) {
   const scrollAreaRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
 
   const [accessToken, setAccessToken] = useState('');
 
@@ -40,8 +43,8 @@ export default function Chat({ messages, setMessages }) {
         }
 
         const userData = await response.json();
-        console.log('user data is', userData);
         setUserEmail(userData.email);
+        setUserName(userData.user);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -51,7 +54,6 @@ export default function Chat({ messages, setMessages }) {
   }, [accessToken]);
 
   useEffect(() => {
-    console.log('Access token is set');
     setAccessToken(window.localStorage.getItem('accessToken') || '');
   }, []);
 
@@ -67,13 +69,11 @@ export default function Chat({ messages, setMessages }) {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
             },
             body: JSON.stringify({
-              user_email: userEmail,
-              course_id: courseIdentifier,
+              // user_email: userEmail,
+              course_id: courseIdentifier.split('-')[0],
             }),
           }
         );
-
-        console.log('Response status:', response.status);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -153,11 +153,10 @@ export default function Chat({ messages, setMessages }) {
 
       if (pdfFiles.length > 0) {
         const formData = new FormData();
-        formData.append('user_id', userEmail);
-        formData.append('course_id', courseIdentifier);
+        formData.append('course_id', courseIdentifier.split('-')[0]);
         pdfFiles.forEach((file) => formData.append('files', file));
 
-        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/upload', {
+        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/resources/upload/', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -173,8 +172,8 @@ export default function Chat({ messages, setMessages }) {
           },
           body: JSON.stringify({
             query: inputMessage,
-            user_email: userEmail,
-            course_id: courseIdentifier,
+            // user_email: userEmail,
+            course_id: courseIdentifier.split('-')[0],
           }),
         });
       }
@@ -184,8 +183,6 @@ export default function Chat({ messages, setMessages }) {
       }
 
       const data = await response.json();
-      console.log('data received from backend is', data);
-      console.log('messages currently are', messages);
 
       const botResponse = {
         id: messages.length + 2,
@@ -193,7 +190,6 @@ export default function Chat({ messages, setMessages }) {
         text: data.response,
         timestamp: new Date(),
       };
-      console.log('bot message is', botResponse);
 
       setPdfFiles([]);
       setMessages((prevMessages) => [...prevMessages, botResponse]);
@@ -226,13 +222,28 @@ export default function Chat({ messages, setMessages }) {
                   message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
                 } items-start max-w-[70%]`}>
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>{message.sender === 'user' ? 'U' : 'B'}</AvatarFallback>
+                  <AvatarFallback>
+                    {message.sender === 'user' ? (
+                      userName && userName.charAt(0).toUpperCase()
+                    ) : (
+                      <Image
+                        src="/file.png"
+                        width={32}
+                        height={32}
+                        alt="chatbot with studiflow logo"
+                      />
+                    )}
+                  </AvatarFallback>
                 </Avatar>
                 <div
                   className={`mx-2 ${
                     message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'
                   } ${message.isTyping ? '' : 'p-3 rounded-lg'}`}>
-                  {message.isTyping ? <TypingIndicator /> : message.text}
+                  {message.isTyping ? (
+                    <TypingIndicator />
+                  ) : (
+                    <ReactMarkdown className="markdown-content">{message.text}</ReactMarkdown>
+                  )}
                 </div>
               </div>
             </div>

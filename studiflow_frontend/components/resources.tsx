@@ -94,7 +94,7 @@ const Resources: React.FC = ({ courseId }: { courseId: number }) => {
     if (window.confirm('Are you sure you want to delete the selected resources?')) {
       try {
         const token = localStorage.getItem('accessToken');
-        await fetch(`https://studiflow-a4bd949e558f.herokuapp.com/resources/delete/`, {
+        await fetch(`http://localhost:8000/resources/delete/`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
