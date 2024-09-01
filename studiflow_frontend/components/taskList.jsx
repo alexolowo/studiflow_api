@@ -37,6 +37,18 @@ import {
   DialogDescription,
 } from './ui/dialog';
 import TaskFilterBar from './filterBar';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import ReactMarkdown from 'react-markdown';
 
 export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [taskStatus, setTaskStatus] = useState({});
@@ -53,6 +65,10 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
   const [deleteTaskOpen, setDeleteTaskOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [isQuickEdit, setIsQuickEdit] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
+  const [currentTask, setCurrentTask] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const sortTasksByDueDate = (tasks) => {
     return [...tasks].sort((a, b) => {
@@ -323,6 +339,37 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
       getCourseTasks().catch((error) => console.error('error importing tasks', error));
   }, [importEnabled]);
 
+  const askAIAboutTask = async (task) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          query: `Can you provide some advice or information about this task: ${task.title}? Here are the details: ${task.description}`,
+          course_id: courseId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setAiResponse(data.response);
+      setCurrentTask(task);
+      setIsDrawerOpen(true);
+    } catch (error) {
+      console.error('Error asking AI about task:', error);
+      // Handle error (e.g., show an error message)
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-screen-xl mx-auto p-10 dark:bg-gray-800">
       <div className="flex items-center pb-8 px-8 text-4xl font-semibold text-gray-800">
@@ -424,8 +471,18 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
 
                 <AccordionContent className="flex justify-between">
                   <div className="flex gap-6">
-                    <Button className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:from-purple-600 hover:via-pink-600 hover:to-indigo-600">
-                      Ask StudiFlow AI about this task?
+                    <Button
+                      className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:from-purple-600 hover:via-pink-600 hover:to-indigo-600"
+                      onClick={() => askAIAboutTask(task)}
+                      disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Ask StudiFlow AI about this task?'
+                      )}
                     </Button>
                     {task.link && (
                       <Button variant="link">
@@ -553,6 +610,31 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
           <p className="text-sm text-gray-600">Create New Task</p>
         </HoverCardContent>
       </HoverCard>
+
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>AI Response for: {currentTask?.title}</DrawerTitle>
+            <DrawerDescription>
+              Here&apos;s what StudiFlow AI has to say about this task:
+            </DrawerDescription>
+          </DrawerHeader>
+          <ScrollArea className="h-[60vh] p-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <ReactMarkdown className="markdown-content">{aiResponse}</ReactMarkdown>
+            )}
+          </ScrollArea>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       <Toaster />
     </div>
