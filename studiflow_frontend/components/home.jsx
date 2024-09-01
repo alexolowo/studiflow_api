@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CourseHeader } from '@/components/courseHeader';
-
+import Image from 'next/image';
+import StudiFlowLogo from '@/public/file.png';
 export default function Home({ logout }) {
   // const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -72,20 +73,23 @@ export default function Home({ logout }) {
   return (
     <>
       <div className="flex justify-between items-center py-4 px-8 bg-white shadow-md">
-        <div className="text-xl font-semibold text-gray-800">Hi {username}!</div>
+        <div className="flex items-center space-x-2">
+          <Image src={StudiFlowLogo} alt="StudiFlow Logo" width={85} height={85} />
+          <span className="text-xl font-semibold text-gray-800">Hi {username}!</span>
+        </div>
         <div>
           <CourseHeader />
         </div>
         <div className="flex items-center space-x-4">
           <div className="relative w-12 h-12 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gray-200 rounded-full"></div>
-            <FaBell className="w-6 h-6 text-gray-600 relative z-10" />
+            {/* <div className="absolute inset-0 bg-gray-200 rounded-full"></div>
+            <FaBell className="w-6 h-6 text-gray-600 relative z-10" /> */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
+                {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+                <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

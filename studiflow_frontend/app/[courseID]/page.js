@@ -10,6 +10,16 @@ import Resources from '@/components/resources';
 import { mapBackendFieldsToFrontendTask, parseCourses } from '@/lib/utils';
 import { CourseHeader } from '@/components/courseHeader';
 import jsPDF from 'jspdf';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export default function CourseView() {
   const params = useParams();
@@ -305,7 +315,33 @@ export default function CourseView() {
                     clipRule="evenodd"
                   />
                 </svg>
-                Clear Chat
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 ease-in-out flex items-center">
+                      Clear Chat
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure you want to clear the chat?</DialogTitle>
+                      <DialogDescription>
+                        This action cannot be undone. You may want to print the chat first.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        className="bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out flex items-center"
+                        onClick={printChat}>
+                        Print Chat
+                      </Button>
+                      <Button variant="destructive" onClick={clearChat}>
+                        Clear Chat
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </button>
             </div>
           )}

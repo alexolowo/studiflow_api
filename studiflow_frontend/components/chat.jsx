@@ -153,11 +153,10 @@ export default function Chat({ messages, setMessages }) {
 
       if (pdfFiles.length > 0) {
         const formData = new FormData();
-        formData.append('user_id', userEmail);
         formData.append('course_id', courseIdentifier);
         pdfFiles.forEach((file) => formData.append('files', file));
 
-        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/chat/upload', {
+        response = await fetch('https://studiflow-a4bd949e558f.herokuapp.com/resources/upload/', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -190,7 +189,7 @@ export default function Chat({ messages, setMessages }) {
       const botResponse = {
         id: messages.length + 2,
         sender: 'bot',
-        text: data.response,
+        text: 'Files uploaded successfully',
         timestamp: new Date(),
       };
       console.log('bot message is', botResponse);

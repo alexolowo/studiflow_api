@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaHome } from 'react-icons/fa';
 import Link from 'next/link';
-import StudiFlowLogo from '@/public/studiflowLogo.png';
+import StudiFlowLogo from '@/public/file.png';
 import Image from 'next/image';
 
 const PageBanner = () => {
