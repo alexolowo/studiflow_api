@@ -125,8 +125,8 @@ export default function ListViewCourses() {
             import courses from Canvas.
           </p>
           <p className="text-sm text-gray-500">
-            To import courses, make sure you've set your Canvas token. You can do this by clicking
-            the profile avatar on the top right of the screen.
+            To import courses, make sure you&apos;ve set your Canvas token. You can do this by
+            clicking the profile avatar on the top right of the screen.
           </p>
         </div>
       ) : (

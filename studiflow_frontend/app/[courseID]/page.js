@@ -291,7 +291,7 @@ export default function CourseView() {
         <CourseSideNav activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
       <main className="flex-1 ml-56 p-8">
-        <div className="fixed w-[80%] ml-[2%] z-50 top-4 mb-8 flex items-center justify-between bg-white shadow-lg rounded-xl p-6">
+        <div className="fixed w-[calc(100%-4rem)] max-w-[80%] left-[calc(14rem+2%)] right-[2%] z-50 top-4 mb-8 flex items-center justify-between bg-white shadow-lg rounded-xl p-6">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold text-gray-800">{courseCode}</h1>
             <CourseHeader currentCourse={chosenCourse} />

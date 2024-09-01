@@ -245,7 +245,7 @@ export default function Chat({ messages, setMessages }) {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col mt-20">
       <ScrollArea className="flex-grow p-8">
         <div className="flex flex-col h-full" ref={scrollAreaRef}>
           {messages.map((message) => (

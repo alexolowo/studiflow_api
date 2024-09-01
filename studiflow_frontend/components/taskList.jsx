@@ -384,8 +384,8 @@ export default function TaskList({ tasks, onImport, courseId, onChange }) {
             import tasks from Canvas.
           </p>
           <p className="text-sm text-gray-500">
-            To import tasks, make sure you've set your Canvas token. You can do this by clicking the
-            profile avatar on the top left of the home screen.
+            To import tasks, make sure you&apos;ve set your Canvas token. You can do this by
+            clicking the profile avatar on the top left of the home screen.
           </p>
         </div>
       ) : (
