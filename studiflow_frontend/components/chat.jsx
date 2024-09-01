@@ -67,7 +67,7 @@ export default function Chat({ messages, setMessages }) {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
             },
             body: JSON.stringify({
-              user_email: userEmail,
+              // user_email: userEmail,
               course_id: courseIdentifier,
             }),
           }
@@ -172,7 +172,7 @@ export default function Chat({ messages, setMessages }) {
           },
           body: JSON.stringify({
             query: inputMessage,
-            user_email: userEmail,
+            // user_email: userEmail,
             course_id: courseIdentifier,
           }),
         });
