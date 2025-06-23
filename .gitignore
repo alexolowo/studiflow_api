@@ -134,6 +134,110 @@ ENV/
 env.bak/
 venv.bak/
 
+# Additional environment files and sensitive information
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env.*.local
+.env.*.development
+.env.*.test
+.env.*.production
+.env.*.staging
+
+# Configuration files with sensitive data
+config.json
+config.local.json
+config.production.json
+config.development.json
+config.test.json
+settings.json
+settings.local.json
+secrets.json
+secrets.local.json
+
+# API keys and tokens
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+*.p8
+*.pem
+*.key.pub
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_ecdsa
+id_ecdsa.pub
+
+# Database credentials and connection strings
+database.yml
+database.local.yml
+db.yml
+db.local.yml
+
+# PostgreSQL Config
+pg_service.conf
+postgresql.conf
+pg_hba.conf
+
+# OAuth and authentication
+.oauth
+.oauth.json
+auth.json
+auth.local.json
+credentials.json
+credentials.local.json
+service-account.json
+service-account.local.json
+
+# SSL certificates
+*.crt
+*.csr
+*.pem
+*.key
+*.p12
+*.pfx
+ssl/
+certificates/
+
+# Logs and temporary files
+logs/
+*.log
+*.log.*
+tmp/
+temp/
+.tmp/
+.temp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Node.js (if using any frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
 # Spyder project settings
 .spyderproject
 .spyproject
