@@ -184,6 +184,7 @@ db.local.yml
 pg_service.conf
 postgresql.conf
 pg_hba.conf
+.my_pgpass
 
 # OAuth and authentication
 .oauth
